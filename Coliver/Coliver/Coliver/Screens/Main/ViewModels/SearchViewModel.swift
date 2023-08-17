@@ -37,9 +37,13 @@ final class SearchViewModel: ObservableObject {
 	
 	@Published var text: String = ""
 	
-	// MARK: Initialization
+	private let userService: UserServiceProtocol
 	
-	init() {
+	// MARK: - Initialzation
+	
+	init(userService: UserServiceProtocol = UserService()) {
+		self.userService = userService
+		
 		stateMachine.delegate = self
 		stateMachine.statePublisher
 			.receive(on: DispatchQueue.main)
@@ -69,7 +73,7 @@ final class SearchViewModel: ObservableObject {
 	func search() {
 		stateMachine.tryEvent(.loading)
 		
-		ApiService.shared.search()
+		userService.search()
 			.receive(on: DispatchQueue.main)
 			.sink(receiveCompletion: { [weak self] completion in
 				guard let self, case .failure = completion else { return }

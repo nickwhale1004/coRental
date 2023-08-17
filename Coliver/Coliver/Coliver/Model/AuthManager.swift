@@ -8,7 +8,13 @@
 import Foundation
 import Combine
 
-final class AuthManager {
+protocol AuthManagerProtocol {
+	func login(login: String, password: String) -> AnyPublisher<String, Error>
+	func register(_ user: UserModel, login: String, password: String) -> AnyPublisher<String, Error>
+	func checkToken() -> AnyPublisher<Bool, Never>
+}
+
+final class AuthManager: AuthManagerProtocol {
 	
 	// MARK: - Types
 	
@@ -30,11 +36,13 @@ final class AuthManager {
 	var isAuth: AuthStatus = .notDefined
 	private(set) var token: String?
 	
+	private let authService: AuthServiceProtocol
 	private var cancellables: Set<AnyCancellable> = []
 	
 	// MARK: - Initialization
 	
-	init() {
+	init(authService: AuthServiceProtocol = AuthService()) {
+		self.authService = authService
 		checkFirstLaunch()
 	}
 	
@@ -42,9 +50,9 @@ final class AuthManager {
 	
 	func login(login: String, password: String) -> AnyPublisher<String, Error> {
 		return Future<String, Error> { [weak self] promise in
-			
 			guard let self else { return }
-			ApiService().login(login: login, password: password)
+			
+			authService.login(login: login, password: password)
 				.receive(on: DispatchQueue.main)
 				.sink(receiveCompletion: { completion in
 					if case let .failure(error) = completion {
@@ -55,7 +63,7 @@ final class AuthManager {
 					self.saveTokenToKeychain(token)
 					promise(.success(token))
 				})
-				.store(in: &self.cancellables)
+				.store(in: &cancellables)
 		}
 		.eraseToAnyPublisher()
 	}
@@ -64,7 +72,7 @@ final class AuthManager {
 		return Future<String, Error> { [weak self] promise in
 			guard let self else { return }
 			
-			ApiService().register(user: user, login: login, password: password)
+			authService.register(user: user, login: login, password: password)
 				.receive(on: DispatchQueue.main)
 				.sink(receiveCompletion: { completion in
 					if case let .failure(error) = completion {
@@ -75,7 +83,7 @@ final class AuthManager {
 					self.saveTokenToKeychain(token)
 					promise(.success(token))
 				})
-				.store(in: &self.cancellables)
+				.store(in: &cancellables)
 		}
 		.eraseToAnyPublisher()
 	}
@@ -85,13 +93,13 @@ final class AuthManager {
 		return Future<Bool, Never> { [weak self] promise in
 			guard
 				let self,
-				let token = self.getTokenFromKeychain()
+				let token = getTokenFromKeychain()
 			else {
 				print("Token not found")
 				return
 			}
 			
-			ApiService.shared.checkToken(token)
+			authService.checkToken(token)
 				.receive(on: DispatchQueue.main)
 				.sink(receiveCompletion: { completion in
 					if case let .failure(error) = completion {
@@ -106,7 +114,7 @@ final class AuthManager {
 					}
 					promise(.success(self.isAuth == .authed))
 				})
-				.store(in: &self.cancellables)
+				.store(in: &cancellables)
 		}
 		.eraseToAnyPublisher()
 	}
@@ -126,7 +134,6 @@ final class AuthManager {
 			kSecValueData as String: token.data(using: .utf8)!,
 			kSecAttrAccessible as String: kSecAttrAccessibleWhenUnlocked
 		]
-		
 		SecItemDelete(query as CFDictionary)
 		
 		let status = SecItemAdd(query as CFDictionary, nil)
@@ -158,7 +165,6 @@ final class AuthManager {
 			kSecClass as String: kSecClassGenericPassword,
 			kSecAttrAccount as String: Constants.token
 		]
-		
 		let status = SecItemDelete(query as CFDictionary)
 		if status != errSecSuccess {
 			print("Failed to clear Keychain with status: \(status)")

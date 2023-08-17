@@ -18,9 +18,7 @@ struct ColiverApp: App {
 			if !viewModel.hasAppLoaded {
 				SplashView(hasAppLoaded: $viewModel.hasAppLoaded)
 					.onReceive(viewModel.tokenPublisher) { isAuthed in
-						if isAuthed {
-							router.rootView = AuthManager.shared.isAuth == .authed ? .main : .welcome
-						}
+						router.rootView = isAuthed ? .main : .welcome
 					}
 			} else {
 				NavigationStack(path: $router.path) {

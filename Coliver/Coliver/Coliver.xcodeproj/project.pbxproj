@@ -8,7 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		110B0CF92A1C085C001B9E92 /* AuthManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 110B0CF82A1C085C001B9E92 /* AuthManager.swift */; };
-		110B0CFB2A1C0AC0001B9E92 /* ApiService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 110B0CFA2A1C0AC0001B9E92 /* ApiService.swift */; };
 		110B0CFD2A1C1DC0001B9E92 /* NSMutableData+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 110B0CFC2A1C1DC0001B9E92 /* NSMutableData+Extension.swift */; };
 		110B0CFF2A1C2F72001B9E92 /* ColiverAppController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 110B0CFE2A1C2F72001B9E92 /* ColiverAppController.swift */; };
 		11286E432A0EE61A00F27B3E /* PickerTextField.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11286E422A0EE61A00F27B3E /* PickerTextField.swift */; };
@@ -25,9 +24,9 @@
 		1136933E2A1D311200BEBB02 /* ProfileViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1136933D2A1D311200BEBB02 /* ProfileViewModel.swift */; };
 		113693402A1D5C4F00BEBB02 /* SearchSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1136933F2A1D5C4E00BEBB02 /* SearchSettingsView.swift */; };
 		113693422A1D5CB700BEBB02 /* SearchSettingsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 113693412A1D5CB700BEBB02 /* SearchSettingsViewModel.swift */; };
-		113693442A1D610000BEBB02 /* ApiService+Auth.swift in Sources */ = {isa = PBXBuildFile; fileRef = 113693432A1D610000BEBB02 /* ApiService+Auth.swift */; };
-		113693462A1D612B00BEBB02 /* ApiService+Image.swift in Sources */ = {isa = PBXBuildFile; fileRef = 113693452A1D612B00BEBB02 /* ApiService+Image.swift */; };
-		113693482A1D618D00BEBB02 /* ApiService+User.swift in Sources */ = {isa = PBXBuildFile; fileRef = 113693472A1D618D00BEBB02 /* ApiService+User.swift */; };
+		113693442A1D610000BEBB02 /* AuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 113693432A1D610000BEBB02 /* AuthService.swift */; };
+		113693462A1D612B00BEBB02 /* ImageService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 113693452A1D612B00BEBB02 /* ImageService.swift */; };
+		113693482A1D618D00BEBB02 /* UserService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 113693472A1D618D00BEBB02 /* UserService.swift */; };
 		1136934D2A1D7AC900BEBB02 /* SearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1136934C2A1D7AC900BEBB02 /* SearchView.swift */; };
 		1136934F2A1D7E1600BEBB02 /* SearchCellViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1136934E2A1D7E1600BEBB02 /* SearchCellViewModel.swift */; };
 		113693532A1D7F8C00BEBB02 /* SearchCellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 113693522A1D7F8C00BEBB02 /* SearchCellView.swift */; };
@@ -54,7 +53,6 @@
 
 /* Begin PBXFileReference section */
 		110B0CF82A1C085C001B9E92 /* AuthManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthManager.swift; sourceTree = "<group>"; };
-		110B0CFA2A1C0AC0001B9E92 /* ApiService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApiService.swift; sourceTree = "<group>"; };
 		110B0CFC2A1C1DC0001B9E92 /* NSMutableData+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NSMutableData+Extension.swift"; sourceTree = "<group>"; };
 		110B0CFE2A1C2F72001B9E92 /* ColiverAppController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColiverAppController.swift; sourceTree = "<group>"; };
 		11286E422A0EE61A00F27B3E /* PickerTextField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PickerTextField.swift; sourceTree = "<group>"; };
@@ -71,9 +69,9 @@
 		1136933D2A1D311200BEBB02 /* ProfileViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileViewModel.swift; sourceTree = "<group>"; };
 		1136933F2A1D5C4E00BEBB02 /* SearchSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchSettingsView.swift; sourceTree = "<group>"; };
 		113693412A1D5CB700BEBB02 /* SearchSettingsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchSettingsViewModel.swift; sourceTree = "<group>"; };
-		113693432A1D610000BEBB02 /* ApiService+Auth.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ApiService+Auth.swift"; sourceTree = "<group>"; };
-		113693452A1D612B00BEBB02 /* ApiService+Image.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ApiService+Image.swift"; sourceTree = "<group>"; };
-		113693472A1D618D00BEBB02 /* ApiService+User.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ApiService+User.swift"; sourceTree = "<group>"; };
+		113693432A1D610000BEBB02 /* AuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthService.swift; sourceTree = "<group>"; };
+		113693452A1D612B00BEBB02 /* ImageService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageService.swift; sourceTree = "<group>"; };
+		113693472A1D618D00BEBB02 /* UserService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserService.swift; sourceTree = "<group>"; };
 		1136934C2A1D7AC900BEBB02 /* SearchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchView.swift; sourceTree = "<group>"; };
 		1136934E2A1D7E1600BEBB02 /* SearchCellViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchCellViewModel.swift; sourceTree = "<group>"; };
 		113693522A1D7F8C00BEBB02 /* SearchCellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchCellView.swift; sourceTree = "<group>"; };
@@ -123,7 +121,7 @@
 		11286E472A1115DB00F27B3E /* Model */ = {
 			isa = PBXGroup;
 			children = (
-				113693492A1D629C00BEBB02 /* ApiService */,
+				113693492A1D629C00BEBB02 /* Services */,
 				117C88602A1916D700D3F107 /* Protocols */,
 				117C885B2A19120100D3F107 /* Server */,
 				11286E482A1115F400F27B3E /* StateMachine.swift */,
@@ -180,15 +178,14 @@
 			path = Modifiers;
 			sourceTree = "<group>";
 		};
-		113693492A1D629C00BEBB02 /* ApiService */ = {
+		113693492A1D629C00BEBB02 /* Services */ = {
 			isa = PBXGroup;
 			children = (
-				110B0CFA2A1C0AC0001B9E92 /* ApiService.swift */,
-				113693432A1D610000BEBB02 /* ApiService+Auth.swift */,
-				113693452A1D612B00BEBB02 /* ApiService+Image.swift */,
-				113693472A1D618D00BEBB02 /* ApiService+User.swift */,
+				113693432A1D610000BEBB02 /* AuthService.swift */,
+				113693452A1D612B00BEBB02 /* ImageService.swift */,
+				113693472A1D618D00BEBB02 /* UserService.swift */,
 			);
-			path = ApiService;
+			path = Services;
 			sourceTree = "<group>";
 		};
 		113ED07B2A0EAFA200DBD46B = {
@@ -380,7 +377,7 @@
 				113ED0962A0EB40500DBD46B /* SplashView.swift in Sources */,
 				11286E5C2A12BF2C00F27B3E /* RemoveFocusOnTap.swift in Sources */,
 				117C88502A18E8B400D3F107 /* UserFindStatus.swift in Sources */,
-				113693462A1D612B00BEBB02 /* ApiService+Image.swift in Sources */,
+				113693462A1D612B00BEBB02 /* ImageService.swift in Sources */,
 				11286E592A123B1F00F27B3E /* Validator.swift in Sources */,
 				113693532A1D7F8C00BEBB02 /* SearchCellView.swift in Sources */,
 				1136934F2A1D7E1600BEBB02 /* SearchCellViewModel.swift in Sources */,
@@ -410,11 +407,10 @@
 				113ED0982A0ED05000DBD46B /* WelcomeView.swift in Sources */,
 				11286E432A0EE61A00F27B3E /* PickerTextField.swift in Sources */,
 				117C884D2A18E4BE00D3F107 /* CompleteRegistrationViewModel.swift in Sources */,
-				113693482A1D618D00BEBB02 /* ApiService+User.swift in Sources */,
+				113693482A1D618D00BEBB02 /* UserService.swift in Sources */,
 				110B0CFD2A1C1DC0001B9E92 /* NSMutableData+Extension.swift in Sources */,
-				110B0CFB2A1C0AC0001B9E92 /* ApiService.swift in Sources */,
 				11286E502A1206AA00F27B3E /* LoginRegisterView.swift in Sources */,
-				113693442A1D610000BEBB02 /* ApiService+Auth.swift in Sources */,
+				113693442A1D610000BEBB02 /* AuthService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

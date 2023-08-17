@@ -8,7 +8,13 @@
 import Foundation
 import Combine
 
-extension ApiService {
+protocol AuthServiceProtocol {
+	func register(user: UserModel, login: String, password: String) -> AnyPublisher<String, Error>
+	func login(login: String, password: String) -> AnyPublisher<String, Error>
+	func checkToken(_ token: String) -> AnyPublisher<Bool, Error>
+}
+
+final class AuthService: AuthServiceProtocol {
 	
 	// MARK: - Types
 	
@@ -18,11 +24,15 @@ extension ApiService {
 		var user: UserModel
 	}
 	
+	// MARK: - Properties
+	
+	let url = "http://127.0.0.1:5000/"
+	
 	// MARK: - Methods
 	
 	func register(user: UserModel, login: String, password: String) -> AnyPublisher<String, Error> {
 		guard
-			let url = URL(string: apiURL + "register")
+			let url = URL(string: url + "register")
 		else {
 			return Fail(error: URLError(.badURL)).eraseToAnyPublisher()
 		}
@@ -51,7 +61,7 @@ extension ApiService {
 	
 	func login(login: String, password: String) -> AnyPublisher<String, Error> {
 		guard
-			let url = URL(string: apiURL + "login")
+			let url = URL(string: url + "login")
 		else {
 			return Fail(error: URLError(.badURL)).eraseToAnyPublisher()
 		}
@@ -80,7 +90,7 @@ extension ApiService {
 	
 	func checkToken(_ token: String) -> AnyPublisher<Bool, Error> {
 		guard
-			let url = URL(string: apiURL + "verify_token")
+			let url = URL(string: url + "verify_token")
 		else {
 			return Fail(error: URLError(.badURL)).eraseToAnyPublisher()
 		}

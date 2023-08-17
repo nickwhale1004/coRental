@@ -90,9 +90,18 @@ final class SearchSettingsViewModel: ObservableObject {
 	
 	@Published private(set) var state: State = .hasLivingNotChecked
 	
+	private let userService: UserServiceProtocol
+	private let imageService: ImageServiceProtocol
+	
 	// MARK: - Initialzation
 	
-	init() {
+	init(
+		userService: UserServiceProtocol = UserService(),
+		imageService: ImageServiceProtocol = ImageService()
+	) {
+		self.userService = userService
+		self.imageService = imageService
+		
 		stateMachine.delegate = self
 		stateMachine.statePublisher.sink { [weak self] newState in
 			guard let self else { return }
@@ -171,7 +180,7 @@ final class SearchSettingsViewModel: ObservableObject {
 			return
 		}
 		
-		ApiService.shared.uploadImage(data)
+		imageService.uploadImage(data)
 			.receive(on: DispatchQueue.main)
 			.sink { [weak self] completion in
 				guard let self, case .failure = completion else { return }
@@ -203,7 +212,7 @@ final class SearchSettingsViewModel: ObservableObject {
 		imageURL = model.house?.imageURL
 		
 		if let imageURL {
-			ApiService.shared.downloadImage(imageURL)
+			imageService.downloadImage(imageURL)
 				.receive(on: DispatchQueue.main)
 				.sink(
 					receiveCompletion: { [weak self] completion in
@@ -219,7 +228,7 @@ final class SearchSettingsViewModel: ObservableObject {
 	}
 	
 	func saveUserModel() {
-		ApiService.shared.updateUser(getUserModel())
+		userService.updateUser(getUserModel())
 			.receive(on: DispatchQueue.main)
 			.sink(
 				receiveCompletion: { [weak self] completion in

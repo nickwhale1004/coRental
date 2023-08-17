@@ -8,10 +8,22 @@
 import Foundation
 import Combine
 
-extension ApiService {
+protocol ImageServiceProtocol {
+	func uploadImage(_ imageData: Data) -> AnyPublisher<String, Error>
+	func downloadImage(_ url: String) -> AnyPublisher<Data, Error>
+}
+
+final class ImageService: ImageServiceProtocol {
+	
+	// MARK: - Properties
+	
+	let url = "http://127.0.0.1:5000/"
+	
+	// MARK: - Methods
+	
 	func uploadImage(_ imageData: Data) -> AnyPublisher<String, Error> {
 		guard
-			let url = URL(string: apiURL + "upload")
+			let url = URL(string: url + "upload")
 		else {
 			return Fail(error: URLError(.badURL)).eraseToAnyPublisher()
 		}

@@ -63,9 +63,16 @@ final class CompleteRegistrationViewModel: ObservableObject {
 	
 	@Published private(set) var state: State = .hasLivingNotChecked
 	
+	private let imageService: ImageServiceProtocol
+	
 	// MARK: - Initialzation
 	
-	init(_ model: UserModel) {
+	init(
+		_ model: UserModel,
+		imageService: ImageServiceProtocol = ImageService()
+	) {
+		self.imageService = imageService
+		
 		updateUser(model)
 		
 		stateMachine.delegate = self
@@ -131,7 +138,7 @@ final class CompleteRegistrationViewModel: ObservableObject {
 			return
 		}
 		
-		ApiService.shared.uploadImage(data)
+		imageService.uploadImage(data)
 			.receive(on: DispatchQueue.main)
 			.sink { [weak self] completion in
 				guard let self, case .failure = completion else { return }

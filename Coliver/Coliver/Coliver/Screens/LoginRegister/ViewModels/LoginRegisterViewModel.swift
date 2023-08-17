@@ -50,10 +50,16 @@ final class LoginRegisterViewModel: ObservableObject {
 	private var valEmail = Validator(mode: .email)
 	private var valPassword = Validator(mode: .password)
 	
+	private let authManager: AuthManagerProtocol
+	
 	// MARK: - Initialization
 	
-	init(mode: Mode) {
+	init(
+		mode: Mode,
+		authManager: AuthManagerProtocol = AuthManager.shared
+	) {
 		self.mode = mode
+		self.authManager = authManager
 		
 		stateMachine.delegate = self
 		stateMachine.statePublisher.sink { [weak self] newState in
@@ -102,7 +108,7 @@ final class LoginRegisterViewModel: ObservableObject {
 	}
 	
 	private func login() {
-		AuthManager.shared.login(login: email, password: password)
+		authManager.login(login: email, password: password)
 			.receive(on: DispatchQueue.main)
 			.sink(
 				receiveCompletion: { [weak self] completion in
@@ -125,7 +131,7 @@ final class LoginRegisterViewModel: ObservableObject {
 	private func register() {
 		guard case let .register(user) = mode else { return }
 		
-		AuthManager.shared.register(user, login: email, password: password)
+		authManager.register(user, login: email, password: password)
 			.receive(on: DispatchQueue.main)
 			.sink(
 				receiveCompletion: { [weak self] completion in

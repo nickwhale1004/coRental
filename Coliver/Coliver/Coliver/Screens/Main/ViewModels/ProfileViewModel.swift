@@ -74,10 +74,13 @@ final class ProfileViewModel: ObservableObject {
 	private var cancellables = [AnyCancellable]()
 	
 	private var valName = Validator(mode: .namePart)
+	private let userService: UserServiceProtocol
 	
 	// MARK: - Initialzation
 	
-	init() {
+	init(userService: UserServiceProtocol = UserService()) {
+		self.userService = userService
+		
 		stateMachine.delegate = self
 		stateMachine.statePublisher.sink { [weak self] newState in
 			guard let self else { return }
@@ -144,7 +147,7 @@ final class ProfileViewModel: ObservableObject {
 	}
 	
 	func saveUserModel() {
-		ApiService.shared.updateUser(getUserModel())
+		userService.updateUser(getUserModel())
 			.receive(on: DispatchQueue.main)
 			.sink(
 				receiveCompletion: { [weak self] completion in

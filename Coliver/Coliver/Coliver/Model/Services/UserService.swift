@@ -8,7 +8,13 @@
 import Foundation
 import Combine
 
-extension ApiService {
+protocol UserServiceProtocol {
+	func getUser() -> AnyPublisher<UserModel, Error>
+	func updateUser(_ user: UserModel) -> AnyPublisher<Void, Error>
+	func search() -> AnyPublisher<[UserModel], Error>
+}
+
+final class UserService: UserServiceProtocol {
 	
 	// MARK: - Types
 	
@@ -21,11 +27,15 @@ extension ApiService {
 		var user: UserModel
 	}
 	
+	// MARK: - Properties
+	
+	let url = "http://127.0.0.1:5000/"
+	
 	// MARK: - Methods
 	
 	func getUser() -> AnyPublisher<UserModel, Error> {
 		guard
-			let url = URL(string: apiURL + "getUser"),
+			let url = URL(string: url + "getUser"),
 			let token = AuthManager.shared.token
 		else {
 			return Fail(error: URLError(.badURL)).eraseToAnyPublisher()
@@ -60,7 +70,7 @@ extension ApiService {
 	func updateUser(_ user: UserModel) -> AnyPublisher<Void, Error> {
 		guard
 			let token = AuthManager.shared.token,
-			let url = URL(string: apiURL + "updateUser")
+			let url = URL(string: url + "updateUser")
 		else {
 			return Fail(error: URLError(.badURL)).eraseToAnyPublisher()
 		}
@@ -88,7 +98,7 @@ extension ApiService {
 	func search() -> AnyPublisher<[UserModel], Error> {
 		guard
 			let token = AuthManager.shared.token,
-			let url = URL(string: apiURL + "searchUsers")
+			let url = URL(string: url + "searchUsers")
 		else {
 			return Fail(error: URLError(.badURL)).eraseToAnyPublisher()
 		}

@@ -33,9 +33,12 @@ final class MainViewModel: ObservableObject {
 	private(set) var stateMachine = StateMachine<State, Event>(state: .loading)
 	private var cancellables = [AnyCancellable]()
 	
+	private let userService: UserServiceProtocol
+	
 	// MARK: - Initialzation
 	
-	init() {
+	init(userService: UserServiceProtocol = UserService()) {
+		self.userService = userService
 		loadUser()
 		
 		stateMachine.delegate = self
@@ -51,7 +54,7 @@ final class MainViewModel: ObservableObject {
 	func loadUser() {
 		stateMachine.tryEvent(.loading)
 		
-		ApiService.shared.getUser()
+		userService.getUser()
 			.receive(on: DispatchQueue.main)
 			.sink { [weak self] completion in
 				guard let self, case .failure = completion else { return }
