@@ -12,13 +12,13 @@ final class MainViewModel: ObservableObject {
 	
 	// MARK: - Types
 	
-	enum State {
+	enum State: StateProtocol {
 		case loading
 		case loaded
 		case error
 	}
 	
-	enum Event {
+	enum Event: EventProtocol {
 		case loading
 		case loaded
 		case error
@@ -41,30 +41,34 @@ final class MainViewModel: ObservableObject {
 		self.userService = userService
 		loadUser()
 		
-		stateMachine.delegate = self
+		stateMachine.reducer = self
 		stateMachine.statePublisher.sink { [weak self] newState in
 			guard let self else { return }
-			self.state = newState
+			state = newState
 		}
 		.store(in: &cancellables)
 	}
 	
 	// MARK: - Methods
 	
-	func loadUser() {
+	func repeatLoadButtonPressed() {
+		loadUser()
+	}
+	
+	private func loadUser() {
 		stateMachine.tryEvent(.loading)
 		
 		userService.getUser()
 			.receive(on: DispatchQueue.main)
 			.sink { [weak self] completion in
 				guard let self, case .failure = completion else { return }
-				self.stateMachine.tryEvent(.error)
+				stateMachine.tryEvent(.error)
 				
 			} receiveValue: { [weak self] model in
 				guard let self else { return }
 				
-				self.userModel = model
-				self.stateMachine.tryEvent(.loaded)
+				userModel = model
+				stateMachine.tryEvent(.loaded)
 			}
 			.store(in: &cancellables)
 	}
@@ -72,17 +76,17 @@ final class MainViewModel: ObservableObject {
 
 // MARK: - StateMachineDelegate
 
-extension MainViewModel: StateMachineDelegate {
-	func nextState(for event: any EventProtocol) -> (any StateProtocol)? {
-		guard let event = event as? Event else { return nil }
-		
-		switch event {
+extension MainViewModel: StateMachineReducer {
+	func reduce(for event: EventProtocol) -> (any StateProtocol)? {
+		switch event as? Event {
 		case .loading:
 			return State.loading
 		case .loaded:
 			return State.loaded
 		case .error:
 			return State.error
+		default:
+			return nil
 		}
 	}
 }

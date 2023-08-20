@@ -12,14 +12,14 @@ final class SearchViewModel: ObservableObject {
 	
 	// MARK: - Types
 	
-	enum State: Equatable {
+	enum State: StateProtocol {
 		case loading
 		case loaded
 		case empty
 		case error
 	}
 	
-	enum Event {
+	enum Event: EventProtocol {
 		case loading
 		case loaded
 		case empty
@@ -44,22 +44,22 @@ final class SearchViewModel: ObservableObject {
 	init(userService: UserServiceProtocol = UserService()) {
 		self.userService = userService
 		
-		stateMachine.delegate = self
+		stateMachine.reducer = self
 		stateMachine.statePublisher
 			.receive(on: DispatchQueue.main)
 			.sink { [weak self] newState in
 				guard let self else { return }
-				self.state = newState
+				state = newState
 				
-				switch self.state {
+				switch state {
 				case .empty:
-					self.text = "Пусто!"
+					text = "Пусто!"
 					
 				case .loading:
-					self.text = "Загрузка..."
+					text = "Загрузка..."
 					
 				case .error:
-					self.text = "Ошибка!"
+					text = "Ошибка!"
 					
 				default:
 					break
@@ -75,24 +75,24 @@ final class SearchViewModel: ObservableObject {
 		
 		userService.search()
 			.receive(on: DispatchQueue.main)
-			.sink(receiveCompletion: { [weak self] completion in
+			.sink { [weak self] completion in
 				guard let self, case .failure = completion else { return }
-				self.stateMachine.tryEvent(.error)
+				stateMachine.tryEvent(.error)
 				
-			}, receiveValue: { [weak self] userModels in
+			} receiveValue: { [weak self] userModels in
 				guard let self else { return }
 				
-				self.cellViewModels = userModels.map { SearchCellViewModel($0) }
-				self.stateMachine.tryEvent(self.cellViewModels.isEmpty ? .empty : .loaded)
-			})
+				cellViewModels = userModels.map { SearchCellViewModel($0) }
+				stateMachine.tryEvent(self.cellViewModels.isEmpty ? .empty : .loaded)
+			}
 			.store(in: &cancellables)
 	}
 }
 
 // MARK: - StateMachineDelegate
 
-extension SearchViewModel: StateMachineDelegate {
-	func nextState(for event: any EventProtocol) -> (any StateProtocol)? {
+extension SearchViewModel: StateMachineReducer {
+	func reduce(for event: EventProtocol) -> (any StateProtocol)? {
 		guard let event = event as? Event else { return nil }
 		
 		switch event {

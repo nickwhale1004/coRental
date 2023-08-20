@@ -54,15 +54,15 @@ final class AuthManager: AuthManagerProtocol {
 			
 			authService.login(login: login, password: password)
 				.receive(on: DispatchQueue.main)
-				.sink(receiveCompletion: { completion in
+				.sink { completion in
 					if case let .failure(error) = completion {
 						promise(.failure(error))
 					}
-				}, receiveValue: { token in
+				} receiveValue: { token in
 					self.token = token
 					self.saveTokenToKeychain(token)
 					promise(.success(token))
-				})
+				}
 				.store(in: &cancellables)
 		}
 		.eraseToAnyPublisher()
@@ -74,15 +74,15 @@ final class AuthManager: AuthManagerProtocol {
 			
 			authService.register(user: user, login: login, password: password)
 				.receive(on: DispatchQueue.main)
-				.sink(receiveCompletion: { completion in
+				.sink { completion in
 					if case let .failure(error) = completion {
 						promise(.failure(error))
 					}
-				}, receiveValue: { token in
+				} receiveValue: { token in
 					self.token = token
 					self.saveTokenToKeychain(token)
 					promise(.success(token))
-				})
+				}
 				.store(in: &cancellables)
 		}
 		.eraseToAnyPublisher()
@@ -101,11 +101,11 @@ final class AuthManager: AuthManagerProtocol {
 			
 			authService.checkToken(token)
 				.receive(on: DispatchQueue.main)
-				.sink(receiveCompletion: { completion in
+				.sink { completion in
 					if case let .failure(error) = completion {
 						print("Token Verification Error:", error)
 					}
-				}, receiveValue: { isValid in
+				} receiveValue: { isValid in
 					if isValid {
 						self.token = token
 						self.isAuth = .authed
@@ -113,7 +113,7 @@ final class AuthManager: AuthManagerProtocol {
 						self.isAuth = .needLogin
 					}
 					promise(.success(self.isAuth == .authed))
-				})
+				}
 				.store(in: &cancellables)
 		}
 		.eraseToAnyPublisher()

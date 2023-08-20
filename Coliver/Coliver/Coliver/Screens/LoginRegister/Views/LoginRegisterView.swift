@@ -16,69 +16,62 @@ struct LoginRegisterView: View {
 	
 	// MARK: - View
 	
-    var body: some View {
+	var body: some View {
 		ZStack {
-			VStack(alignment: .center, spacing: 30) {
-				PlainTextField(
-					"E-mail",
-					text: $viewModel.email,
-					isRequired: true
-				)
-					.invalid($viewModel.isEmailInvalid)
-				
-				PlainTextField(
-					"Пароль",
-					text: $viewModel.password,
-					isRequired: true,
-					isSecure: true
-				)
-					.invalid($viewModel.isPasswordInvalid)
-				
-				if case .register = viewModel.mode {
-					PlainTextField(
-						"Повторите пароль",
-						text: $viewModel.passwordRepeat,
-						isRequired: true,
-						isSecure: true
-					)
-						.invalid($viewModel.isPasswordRepeatInvalid)
-				}
-			}
-			.frame(maxHeight: .infinity, alignment: .top)
-			.padding(.top, 40)
-			.padding(.horizontal, 20)
-			
-			VStack {
-				Spacer()
-				
-				RoundedButton(
-					text: viewModel.mode == .login ?
-					"Войти": "Зарегистрироваться"
-				) { _ in
-					viewModel.validate()
-					removeFocus()
-				}
-			}
+			textFields
+			nextButton
 		}
-		.onChange(of: viewModel.state) { newValue in
-			switch newValue {
-			case .valid:
-				viewModel.auth()
-			case .authed:
-				router.showMain()
-			default:
-				break
-			}
+		.onAppear {
+			viewModel.router = router
 		}
-		.navigationTitle(
-			viewModel.mode == .login ?
-			"Вход": "Регистрация"
-		)
+		.navigationTitle(viewModel.title)
 		.navigationBarTitleDisplayMode(.large)
 		.toolbarBackground(
 			Color.white,
 			for: .navigationBar
 		)
+	}
+	
+	@ViewBuilder private var textFields: some View {
+		VStack(alignment: .center, spacing: 30) {
+			PlainTextField(
+				"E-mail",
+				text: $viewModel.email,
+				isRequired: true
+			)
+			.invalid($viewModel.isEmailInvalid)
+			
+			PlainTextField(
+				"Пароль",
+				text: $viewModel.password,
+				isRequired: true,
+				isSecure: true
+			)
+			.invalid($viewModel.isPasswordInvalid)
+			
+			if case .register = viewModel.mode {
+				PlainTextField(
+					"Повторите пароль",
+					text: $viewModel.passwordRepeat,
+					isRequired: true,
+					isSecure: true
+				)
+				.invalid($viewModel.isPasswordRepeatInvalid)
+			}
+		}
+		.frame(maxHeight: .infinity, alignment: .top)
+		.padding(.top, 40)
+		.padding(.horizontal, 20)
+	}
+	
+	@ViewBuilder private var nextButton: some View {
+		VStack {
+			Spacer()
+			RoundedButton(text: viewModel.nextButtonTitle) { _ in
+				viewModel.authButtonPressed()
+				removeFocus()
+			}
+		}
 	}
 	
 	// MARK: - Initialization
@@ -89,7 +82,7 @@ struct LoginRegisterView: View {
 }
 
 struct LoginRegisterView_Previews: PreviewProvider {
-    static var previews: some View {
+	static var previews: some View {
 		LoginRegisterView(mode: .login)
-    }
+	}
 }

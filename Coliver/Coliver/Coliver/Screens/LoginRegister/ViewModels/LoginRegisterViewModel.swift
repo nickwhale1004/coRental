@@ -14,17 +14,17 @@ final class LoginRegisterViewModel: ObservableObject {
 	
 	enum Mode: Hashable {
 		case login
-		case register(_ user: UserModel)
+		case register(profile: UserModel)
 	}
 	
-	enum State: Equatable {
+	enum State: StateProtocol {
 		case start
 		case valid
 		case invalid(email: Bool, password: Bool, passwordRepeat: Bool)
 		case authed
 	}
 	
-	enum Event {
+	enum Event: EventProtocol {
 		case validated
 		case unvalidated(email: Bool, password: Bool, passwordRepeat: Bool)
 		case authed
@@ -33,6 +33,10 @@ final class LoginRegisterViewModel: ObservableObject {
 	// MARK: - Properties
 	
 	let mode: Mode
+	var router: Router?
+	
+	lazy var title = mode == .login ? "Вход": "Регистрация"
+	lazy var nextButtonTitle = mode == .login ? "Войти": "Зарегистрироваться"
 	
 	@Published var email = ""
 	@Published var password = ""
@@ -61,16 +65,22 @@ final class LoginRegisterViewModel: ObservableObject {
 		self.mode = mode
 		self.authManager = authManager
 		
-		stateMachine.delegate = self
+		stateMachine.reducer = self
 		stateMachine.statePublisher.sink { [weak self] newState in
 			guard let self else { return }
-			self.state = newState
+			state = newState
 			
-			switch self.state {
+			switch state {
 			case let .invalid(email, password, passwordRepeat):
-				self.isEmailInvalid = email
-				self.isPasswordInvalid = password
-				self.isPasswordRepeatInvalid = passwordRepeat
+				isEmailInvalid = email
+				isPasswordInvalid = password
+				isPasswordRepeatInvalid = passwordRepeat
+				
+			case .valid:
+				auth()
+				
+			case .authed:
+				router?.showMain()
 				
 			default:
 				break
@@ -81,7 +91,11 @@ final class LoginRegisterViewModel: ObservableObject {
 	
 	// MARK: - Methods
 	
-	func validate() {
+	func authButtonPressed() {
+		validate()
+	}
+	
+	private func validate() {
 		let emailValid = valEmail.isValid(email)
 		let passwordValid = valPassword.isValid(password)
 		let passwordRepeatValid = passwordRepeat == password || mode == .login
@@ -99,7 +113,7 @@ final class LoginRegisterViewModel: ObservableObject {
 		}
 	}
 	
-	func auth() {
+	private func auth() {
 		if mode == .login {
 			login()
 		} else {
@@ -110,21 +124,18 @@ final class LoginRegisterViewModel: ObservableObject {
 	private func login() {
 		authManager.login(login: email, password: password)
 			.receive(on: DispatchQueue.main)
-			.sink(
-				receiveCompletion: { [weak self] completion in
-					guard let self else { return }
-					
-					if case let .failure(error) = completion {
-						print("Неуспешная авторизация: \(error)")
-						self.stateMachine.tryEvent(.unvalidated(email: true, password: true, passwordRepeat: true))
-					}
-				},
-				receiveValue: { [weak self] token in
-					guard let self else { return }
-					
-					print("Успешная авторизация. Токен:", token)
-					self.stateMachine.tryEvent(.authed)
-				})
+			.sink { [weak self] completion in
+				guard let self, case let .failure(error) = completion else { return }
+				
+				print("Неуспешная авторизация: \(error)")
+				stateMachine.tryEvent(.unvalidated(email: true, password: true, passwordRepeat: true))
+				
+			} receiveValue: { [weak self] token in
+				guard let self else { return }
+				
+				print("Успешная авторизация. Токен:", token)
+				stateMachine.tryEvent(.authed)
+			}
 			.store(in: &cancellables)
 	}
 	
@@ -133,29 +144,26 @@ final class LoginRegisterViewModel: ObservableObject {
 		
 		authManager.register(user, login: email, password: password)
 			.receive(on: DispatchQueue.main)
-			.sink(
-				receiveCompletion: { [weak self] completion in
-					guard let self else { return }
-					
-					if case let .failure(error) = completion {
-						print("Неуспешная авторизация: \(error)")
-						self.stateMachine.tryEvent(.unvalidated(email: true, password: true, passwordRepeat: true))
-					}
-				},
-				receiveValue: { [weak self] token in
-					guard let self else { return }
-					
-					print("Успешная регистрация. Токен:", token)
-					self.stateMachine.tryEvent(.authed)
-				})
+			.sink { [weak self] completion in
+				guard let self, case let .failure(error) = completion else { return }
+				
+				print("Неуспешная регистрация: \(error)")
+				stateMachine.tryEvent(.unvalidated(email: true, password: true, passwordRepeat: true))
+				
+			} receiveValue: { [weak self] token in
+				guard let self else { return }
+				
+				print("Успешная регистрация. Токен:", token)
+				stateMachine.tryEvent(.authed)
+			}
 			.store(in: &cancellables)
 	}
 }
 
 // MARK: - StateMachineDelegate
 
-extension LoginRegisterViewModel: StateMachineDelegate {
-	func nextState(for event: any EventProtocol) -> (any StateProtocol)? {
+extension LoginRegisterViewModel: StateMachineReducer {
+	func reduce(for event: EventProtocol) -> (any StateProtocol)? {
 		guard let event = event as? Event else { return nil }
 		
 		switch event {

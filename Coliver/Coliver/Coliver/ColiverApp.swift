@@ -15,47 +15,41 @@ struct ColiverApp: App {
 	
 	var body: some Scene {
 		WindowGroup {
-			if !viewModel.hasAppLoaded {
+			if viewModel.hasAppLoaded {
+				NavigationStack(path: $router.path) {
+					getView(from: router.rootView)
+						.navigationDestination(for: Route.self) { route in
+							getView(from: route)
+						}
+				}
+			} else {
 				SplashView(hasAppLoaded: $viewModel.hasAppLoaded)
 					.onReceive(viewModel.tokenPublisher) { isAuthed in
 						router.rootView = isAuthed ? .main : .welcome
 					}
-			} else {
-				NavigationStack(path: $router.path) {
-					ZStack {
-						switch router.rootView {
-						case .welcome:
-							WelcomeView()
-						case .main:
-							MainView()
-						default:
-							Text("Default")
-						}
-					}
-					.environmentObject(router)
-					.navigationDestination(for: Route.self) { route in
-						ZStack {
-							switch route {
-							case .welcome:
-								WelcomeView()
-								
-							case .login:
-								LoginRegisterView(mode: .login)
-								
-							case let .register(user):
-								LoginRegisterView(mode: .register(user))
-								
-							case let .completeRegistration(user):
-								CompleteRegistrationView(user)
-								
-							case .main:
-								MainView()
-							}
-						}
-						.environmentObject(router)
-					}
-				}
 			}
 		}
+	}
+	
+	@ViewBuilder private func getView(from route: Route) -> some View {
+		ZStack {
+			switch route {
+			case .welcome:
+				EditProfileView(mode: .welcome)
+				
+			case .login:
+				LoginRegisterView(mode: .login)
+				
+			case let .register(user):
+				LoginRegisterView(mode: .register(profile: user))
+				
+			case let .completeRegistration(user):
+				SearchSettingsView(mode: .completeRegistration(profile: user))
+				
+			case .main:
+				MainView()
+			}
+		}
+		.environmentObject(router)
 	}
 }

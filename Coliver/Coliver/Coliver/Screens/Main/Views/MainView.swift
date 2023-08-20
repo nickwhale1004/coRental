@@ -8,7 +8,6 @@
 import SwiftUI
 
 struct MainView: View {
-	@State var userModel = UserModel()
 	@StateObject var viewModel = MainViewModel()
 	
 	var body: some View {
@@ -16,7 +15,7 @@ struct MainView: View {
 			switch viewModel.state {
 			case .loaded:
 				TabView {
-					SearchSettingsView($userModel)
+					SearchSettingsView(mode: .searchSettings(profile: $viewModel.userModel))
 						.tabItem {
 							Label("Settings", systemImage: "person.2.badge.gearshape")
 						}
@@ -24,7 +23,7 @@ struct MainView: View {
 						.tabItem {
 							Label("Search", systemImage: "list.dash")
 						}
-					ProfileView($userModel)
+					EditProfileView(mode: .edit(profile: $viewModel.userModel))
 						.tabItem {
 							Label("Profile", systemImage: "person")
 						}
@@ -33,13 +32,8 @@ struct MainView: View {
 				Text("Загрузка...")
 			case .error:
 				RoundedButton(text: "Повторить") { _ in
-					viewModel.loadUser()
+					viewModel.repeatLoadButtonPressed()
 				}
-			}
-		}
-		.onChange(of: viewModel.state) { state in
-			if state == .loaded, let model = viewModel.userModel {
-				userModel = model
 			}
 		}
 	}

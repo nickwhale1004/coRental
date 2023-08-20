@@ -8,22 +8,13 @@
 import Foundation
 
 struct UserModel: Codable, Hashable {
-	var firstName: String
-	var lastName: String
+	var firstName: String = ""
+	var lastName: String = ""
 	var thirdName: String?
-	var age: Int
-	var gender: Gender
+	var age: Int = 0
+	var gender: Gender = .male
 	var about: String?
 	
 	var house: HouseModel?
 	var search: SearchModel?
-}
-
-extension UserModel {
-	init() {
-		firstName = ""
-		lastName = ""
-		age = 0
-		gender = .male
-	}
 }
