@@ -11,7 +11,7 @@ import Combine
 
 struct SearchSettingsView: View {
 	@EnvironmentObject private var router: Router
-	@ObservedObject private var viewModel: SearchSettingsViewModel
+	@StateObject private var viewModel: SearchSettingsViewModel
 	
 	@State private var showExistingHouseParamters: Bool
 	@State private var showFindHouseParamters: Bool
@@ -131,7 +131,7 @@ struct SearchSettingsView: View {
 	
 	init(mode: SearchSettingsViewModel.Mode) {
 		let model = SearchSettingsViewModel(mode: mode)
-		_viewModel = ObservedObject(wrappedValue: model)
+		_viewModel = StateObject(wrappedValue: model)
 		
 		showFindHouseParamters = model.selection == .placeAndFriend
 		showExistingHouseParamters = model.selection == .friend

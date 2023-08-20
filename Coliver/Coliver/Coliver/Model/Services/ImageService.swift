@@ -46,6 +46,7 @@ final class ImageService: ImageServiceProtocol {
 		request.httpBody = body as Data
 		
 		return URLSession.shared.dataTaskPublisher(for: request)
+			.subscribe(on: DispatchQueue.global(qos: .background))
 			.tryMap { data, response -> String in
 				guard
 					let httpResponse = response as? HTTPURLResponse,

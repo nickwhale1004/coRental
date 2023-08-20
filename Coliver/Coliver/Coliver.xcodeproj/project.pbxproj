@@ -103,9 +103,10 @@
 		11286E442A0EE62D00F27B3E /* Screens */ = {
 			isa = PBXGroup;
 			children = (
-				117C88412A18DDE900D3F107 /* Main */,
+				1139CA932A9204E10008DE8C /* EditProfile */,
 				11286E4A2A11230100F27B3E /* LoginRegister */,
-				113ED0952A0EB40500DBD46B /* SplashView.swift */,
+				117C88412A18DDE900D3F107 /* Main */,
+				1139CA942A9204F40008DE8C /* SearchSettings */,
 			);
 			path = Screens;
 			sourceTree = "<group>";
@@ -127,30 +128,10 @@
 		11286E4A2A11230100F27B3E /* LoginRegister */ = {
 			isa = PBXGroup;
 			children = (
-				11286E4C2A11231E00F27B3E /* ViewModels */,
-				11286E4B2A11230F00F27B3E /* Views */,
+				11286E562A121E6E00F27B3E /* LoginRegisterViewModel.swift */,
+				11286E4F2A1206AA00F27B3E /* LoginRegisterView.swift */,
 			);
 			path = LoginRegister;
-			sourceTree = "<group>";
-		};
-		11286E4B2A11230F00F27B3E /* Views */ = {
-			isa = PBXGroup;
-			children = (
-				113ED0972A0ED05000DBD46B /* EditProfileView.swift */,
-				11286E4F2A1206AA00F27B3E /* LoginRegisterView.swift */,
-				117C884A2A18E26100D3F107 /* SearchSettingsView.swift */,
-			);
-			path = Views;
-			sourceTree = "<group>";
-		};
-		11286E4C2A11231E00F27B3E /* ViewModels */ = {
-			isa = PBXGroup;
-			children = (
-				11286E4D2A11233200F27B3E /* EditProfileViewModel.swift */,
-				11286E562A121E6E00F27B3E /* LoginRegisterViewModel.swift */,
-				117C884C2A18E4BE00D3F107 /* SearchSettingsViewModel.swift */,
-			);
-			path = ViewModels;
 			sourceTree = "<group>";
 		};
 		11286E532A12155A00F27B3E /* Extensions */ = {
@@ -178,6 +159,24 @@
 				113693472A1D618D00BEBB02 /* UserService.swift */,
 			);
 			path = Services;
+			sourceTree = "<group>";
+		};
+		1139CA932A9204E10008DE8C /* EditProfile */ = {
+			isa = PBXGroup;
+			children = (
+				11286E4D2A11233200F27B3E /* EditProfileViewModel.swift */,
+				113ED0972A0ED05000DBD46B /* EditProfileView.swift */,
+			);
+			path = EditProfile;
+			sourceTree = "<group>";
+		};
+		1139CA942A9204F40008DE8C /* SearchSettings */ = {
+			isa = PBXGroup;
+			children = (
+				117C884C2A18E4BE00D3F107 /* SearchSettingsViewModel.swift */,
+				117C884A2A18E26100D3F107 /* SearchSettingsView.swift */,
+			);
+			path = SearchSettings;
 			sourceTree = "<group>";
 		};
 		113ED07B2A0EAFA200DBD46B = {
@@ -223,6 +222,7 @@
 		113ED0992A0ED05400DBD46B /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				113ED0952A0EB40500DBD46B /* SplashView.swift */,
 				113ED09A2A0ED9B300DBD46B /* CustomUI */,
 			);
 			path = Views;
@@ -253,8 +253,8 @@
 			isa = PBXGroup;
 			children = (
 				117C88442A18DE1C00D3F107 /* MainView.swift */,
-				1136934C2A1D7AC900BEBB02 /* SearchView.swift */,
 				113693522A1D7F8C00BEBB02 /* SearchCellView.swift */,
+				1136934C2A1D7AC900BEBB02 /* SearchView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";

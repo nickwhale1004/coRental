@@ -74,7 +74,6 @@ final class UserService: UserServiceProtocol {
 		else {
 			return Fail(error: URLError(.badURL)).eraseToAnyPublisher()
 		}
-		
 		let body = UpdateUserBody(token: token, user: user)
 		
 		var request = URLRequest(url: url)
@@ -83,6 +82,7 @@ final class UserService: UserServiceProtocol {
 		request.httpBody = try? JSONEncoder().encode(body)
 		
 		return URLSession.shared.dataTaskPublisher(for: request)
+			.subscribe(on: DispatchQueue.global(qos: .background))
 			.tryMap { data, response -> Void in
 				guard
 					let httpResponse = response as? HTTPURLResponse,

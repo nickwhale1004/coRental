@@ -126,11 +126,12 @@ final class SearchSettingsViewModel: ObservableObject {
 		if case .completeRegistration = mode {
 			router?.showRegister(user)
 		} else {
-			saveUserModel()
+			updateUser()
+			saveUser()
 		}
 	}
 	
-	private func saveUserModel() {
+	private func saveUser() {
 		guard let user = user.wrappedValue else { return }
 		
 		userService.updateUser(user)
@@ -176,9 +177,12 @@ final class SearchSettingsViewModel: ObservableObject {
 	}
 	
 	private func makeImage() {
-		selectedPhotoItem?.loadTransferable(type: Data.self) { [weak self] completion in
-			guard let self, case let .success(data) = completion, let data else { return }
-			selectedImage = UIImage(data: data)
+		selectedPhotoItem?.loadTransferable(type: Data.self) { completion in
+			guard case let .success(data) = completion, let data else { return }
+			
+			DispatchQueue.main.async {
+				self.selectedImage = UIImage(data: data)
+			}
 		}
 	}
 	
@@ -214,26 +218,28 @@ final class SearchSettingsViewModel: ObservableObject {
 	}
 	
 	private func uploadImage(_ completion: @escaping () -> Void) {
-		guard
-			let data = selectedImage?.pngData()
-		else {
-			goNext()
-			return
-		}
-		
-		imageService.uploadImage(data)
-			.receive(on: DispatchQueue.main)
-			.sink { result in
-				guard case .failure = result else { return }
-				print("Error upldoded image")
-				
-			} receiveValue: { [weak self] url in
-				guard let self else { return }
-				
-				imageURL = url
-				completion()
+		DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+			guard
+				let self,
+				let data = selectedImage?.pngData()
+			else {
+				self?.goNext()
+				return
 			}
-			.store(in: &cancellables)
+			imageService.uploadImage(data)
+				.receive(on: DispatchQueue.main)
+				.sink { result in
+					guard case .failure = result else { return }
+					print("Error upldoded image")
+					
+				} receiveValue: { [weak self] url in
+					guard let self else { return }
+					
+					imageURL = url
+					completion()
+				}
+				.store(in: &cancellables)
+		}
 	}
 	
 	private func setupDefaultFields() {
@@ -321,11 +327,7 @@ extension SearchSettingsViewModel: StateMachineReducer {
 		
 		switch event {
 		case .hasLivingValidated:
-			if state != .saved {
-				return State.hasLivingValid
-			} else {
-				return state
-			}
+			return State.hasLivingValid
 			
 		case let .hasLivingInvalidated(address, cost):
 			return State.hasLivingInvalid(address: address, cost: cost)
