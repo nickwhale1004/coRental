@@ -19,7 +19,7 @@ struct MainView: View {
 						.tabItem {
 							Label("Settings", systemImage: "person.2.badge.gearshape")
 						}
-					SearchView()
+					SearchView($viewModel.userModel)
 						.tabItem {
 							Label("Search", systemImage: "list.dash")
 						}

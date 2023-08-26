@@ -19,44 +19,32 @@ final class SearchSettingsViewModel: ObservableObject {
 	}
 	
 	enum State: StateProtocol {
-		case hasLivingNotChecked
-		case hasLivingValid
-		case hasLivingInvalid(address: Bool, cost: Bool)
-		case findLiving
+		case notChecked
+		case valid
+		case invalid(address: Bool, cost: Bool)
 		case error
 		case saved
 	}
 	
 	enum Event: EventProtocol {
-		case selectHasLiving
-		case selectFindLiving
-		case hasLivingValidated
-		case hasLivingInvalidated(address: Bool, cost: Bool)
+		case notChecked
+		case validated
+		case invalidated(address: Bool, cost: Bool)
 		case error
 		case saved
 	}
 	
 	// MARK: - Properties
 	
-	@Published var selection: UserFindStatus = .friend
+	@Published var selection: UserFindStatus = .friend { didSet { validate() } }
+	@Published var ageFrom: Int? { didSet { validate() } }
+	@Published var ageTo: Int? { didSet { validate() } }
+	@Published var gender: Gender? { didSet { validate() } }
+	@Published var findCostFrom: Int? { didSet { validate() } }
+	@Published var findCostTo: Int? { didSet { validate() } }
 	
-	@Published var ageFrom: Int?
-	@Published var ageTo: Int?
-	@Published var gender: Gender?
-	
-	@Published var findCostFrom: Int?
-	@Published var findCostTo: Int?
-	
-	@Published var hasAddress: String = "" {
-		didSet {
-			validate(false)
-		}
-	}
-	@Published var hasCost: Int? {
-		didSet {
-			validate(false)
-		}
-	}
+	@Published var hasAddress: String = "" { didSet { validate() } }
+	@Published var hasCost: Int? { didSet { validate() } }
 	
 	@Published var isAddressInvalid = false
 	@Published var isCostInvalid = false
@@ -64,19 +52,15 @@ final class SearchSettingsViewModel: ObservableObject {
 	@Published var isSaveButtonEnabled = false
 	@Published var saveButtonTitle = "Сохранить"
 	
-	@Published var selectedPhotoItem: PhotosPickerItem? = nil {
-		didSet {
-			makeImage()
-		}
-	}
+	@Published var selectedPhotoItem: PhotosPickerItem? = nil { didSet { makeImage() } }
 	@Published var selectedImage: UIImage? = nil
 
 	var router: Router?
 	
 	private let mode: Mode
 	
-	private var state: State = .hasLivingNotChecked
-	private(set) var stateMachine = StateMachine<State, Event>(state: .hasLivingNotChecked)
+	private var state: State = .notChecked
+	private(set) var stateMachine = StateMachine<State, Event>(state: .notChecked)
 	
 	private var user: UserModel?
 	private var userBinding: Binding<UserModel?>?
@@ -106,8 +90,8 @@ final class SearchSettingsViewModel: ObservableObject {
 			userBinding = model
 		}
 		
-		setupDefaultFields()
 		setupStateMachine()
+		setupDefaultFields()
 	}
 	
 	// MARK: - Methods
@@ -156,17 +140,14 @@ final class SearchSettingsViewModel: ObservableObject {
 			state = newState
 			
 			switch state {
-			case let .hasLivingInvalid(address, cost):
-				setHasLivingInvalid(address: address, cost: cost)
-				
-			case .findLiving:
-				setFindLiving()
+			case let .invalid(address, cost):
+				setInvalid(address: address, cost: cost)
 			
-			case .hasLivingNotChecked:
-				setHasLivingNotChecked()
+			case .notChecked:
+				setNotChecked()
 			
-			case .hasLivingValid:
-				setHasLivingValid()
+			case .valid:
+				setValid()
 				
 			case .error:
 				setError()
@@ -188,18 +169,24 @@ final class SearchSettingsViewModel: ObservableObject {
 		}
 	}
 	
-	private func validate(_ highlight: Bool = true) {
-		let isAddressValid = !hasAddress.isEmpty
-		let isCostValid = hasCost != nil
-		
-		if isCostValid && isAddressValid {
-			stateMachine.tryEvent(.hasLivingValidated)
-		} else if highlight {
-			stateMachine.tryEvent(
-				.hasLivingInvalidated(address: !isAddressValid, cost: !isCostValid)
-			)
-		} else {
-			stateMachine.tryEvent(.selectHasLiving)
+	private func validate(highlight: Bool = false) {
+		switch selection {
+		case .friend:
+			let isAddressValid = !hasAddress.isEmpty
+			let isCostValid = hasCost != nil
+			
+			if isCostValid && isAddressValid {
+				stateMachine.tryEvent(.validated)
+			} else if highlight {
+				stateMachine.tryEvent(
+					.invalidated(address: !isAddressValid, cost: !isCostValid)
+				)
+			} else {
+				stateMachine.tryEvent(.notChecked)
+			}
+			
+		case .placeAndFriend:
+			stateMachine.tryEvent(.validated)
 		}
 	}
 	
@@ -217,7 +204,9 @@ final class SearchSettingsViewModel: ObservableObject {
 			housePriceTo: findCostTo
 		)
 		user?.search = search
-		userBinding?.wrappedValue = user
+		DispatchQueue.main.async {
+			self.userBinding?.wrappedValue = self.user
+		}
 	}
 	
 	private func uploadImage(_ completion: @escaping () -> Void) {
@@ -270,39 +259,31 @@ final class SearchSettingsViewModel: ObservableObject {
 				}
 				.store(in: &cancellables)
 		}
-		
 	}
 }
 
 // MARK: - States
 
 extension SearchSettingsViewModel {
-	private func setHasLivingInvalid(address: Bool, cost: Bool) {
+	private func setInvalid(address: Bool, cost: Bool) {
 		isSaveButtonEnabled = false
 		isAddressInvalid = address
 		isCostInvalid = cost
-		saveButtonTitle = "Сохарнить"
+		saveButtonTitle = "Сохранить"
 	}
 	
-	private func setFindLiving() {
-		isSaveButtonEnabled = true
-		isAddressInvalid = false
-		isCostInvalid = false
-		saveButtonTitle = "Сохарнить"
-	}
-	
-	private func setHasLivingNotChecked() {
+	private func setNotChecked() {
 		isSaveButtonEnabled = false
 		isAddressInvalid = false
 		isCostInvalid = false
-		saveButtonTitle = "Сохарнить"
+		saveButtonTitle = "Сохранить"
 	}
 	
-	private func setHasLivingValid() {
+	private func setValid() {
 		isSaveButtonEnabled = true
 		isAddressInvalid = false
 		isCostInvalid = false
-		saveButtonTitle = "Сохарнить"
+		saveButtonTitle = "Сохранить"
 	}
 	
 	private func setError() {
@@ -327,17 +308,14 @@ extension SearchSettingsViewModel: StateMachineReducer {
 		guard let event = event as? Event else { return nil }
 		
 		switch event {
-		case .hasLivingValidated:
-			return State.hasLivingValid
+		case .validated:
+			return State.valid
 			
-		case let .hasLivingInvalidated(address, cost):
-			return State.hasLivingInvalid(address: address, cost: cost)
+		case let .invalidated(address, cost):
+			return State.invalid(address: address, cost: cost)
 			
-		case .selectFindLiving:
-			return State.findLiving
-			
-		case .selectHasLiving:
-			return State.hasLivingNotChecked
+		case .notChecked:
+			return State.notChecked
 		
 		case .error:
 			return State.error

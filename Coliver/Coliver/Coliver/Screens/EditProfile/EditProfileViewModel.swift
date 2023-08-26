@@ -124,7 +124,9 @@ final class EditProfileViewModel: ObservableObject {
 				thirdName: thirdName,
 				age: age ?? 0,
 				gender: gender ?? .male,
-				about: about
+				about: about,
+				house: profile.wrappedValue?.house,
+				search: profile.wrappedValue?.search
 			)
 			profile.wrappedValue = user
 			saveUser()

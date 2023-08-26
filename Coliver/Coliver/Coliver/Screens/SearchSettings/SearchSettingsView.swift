@@ -50,13 +50,11 @@ struct SearchSettingsView: View {
 		}
 		.onChange(of: viewModel.selection) { selection in
 			if selection == .placeAndFriend {
-				viewModel.stateMachine.tryEvent(.selectFindLiving)
 				withAnimation {
 					showFindHouseParamters = true
 					showExistingHouseParamters = false
 				}
 			} else {
-				viewModel.stateMachine.tryEvent(.selectHasLiving)
 				withAnimation {
 					showFindHouseParamters = false
 					showExistingHouseParamters = true

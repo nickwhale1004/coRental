@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct SearchView: View {
-	@StateObject private var viewModel = SearchViewModel()
+	@StateObject private var viewModel: SearchViewModel
 	
 	var body: some View {
 		ZStack {
@@ -28,10 +28,8 @@ struct SearchView: View {
 			viewModel.search()
 		})
 	}
-}
-
-struct SearchView_Previews: PreviewProvider {
-	static var previews: some View {
-		SearchView()
+	
+	init(_ model: Binding<UserModel?>) {
+		_viewModel = StateObject(wrappedValue: SearchViewModel(userBinding: model))
 	}
 }

@@ -5,7 +5,7 @@
 //  Created by Никита Шляхов on 24.05.2023.
 //
 
-import Foundation
+import SwiftUI
 import Combine
 
 final class SearchViewModel: ObservableObject {
@@ -38,10 +38,16 @@ final class SearchViewModel: ObservableObject {
 	@Published var text: String = ""
 	
 	private let userService: UserServiceProtocol
+	private var lastLoadedUser: UserModel?
+	private var userBinding: Binding<UserModel?>
 	
 	// MARK: - Initialzation
 	
-	init(userService: UserServiceProtocol = UserService()) {
+	init(
+		userBinding: Binding<UserModel?>,
+		userService: UserServiceProtocol = UserService()
+	) {
+		self.userBinding = userBinding
 		self.userService = userService
 		
 		stateMachine.reducer = self
@@ -71,6 +77,7 @@ final class SearchViewModel: ObservableObject {
 	// MARK: - Methods
 	
 	func search() {
+		guard userBinding.wrappedValue != lastLoadedUser else { return }
 		stateMachine.tryEvent(.loading)
 		
 		userService.search()
@@ -86,6 +93,8 @@ final class SearchViewModel: ObservableObject {
 				stateMachine.tryEvent(self.cellViewModels.isEmpty ? .empty : .loaded)
 			}
 			.store(in: &cancellables)
+		
+		lastLoadedUser = userBinding.wrappedValue
 	}
 }
 
