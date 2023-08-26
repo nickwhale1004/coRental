@@ -14,7 +14,7 @@ final class SearchCellViewModel: ObservableObject, Identifiable {
 	@Published var age: Int
 	@Published var about: String
 	
-	@Published var imageURL: URL?
+	@Published var imageURL: String?
 	@Published var address: String?
 	@Published var price: Int?
 	
@@ -26,7 +26,6 @@ final class SearchCellViewModel: ObservableObject, Identifiable {
 		address = model.house?.address
 		price = model.house?.price
 		
-		guard let url = model.house?.imageURL else { return }
-		imageURL = URL(string: url)
+		imageURL = model.house?.imageURL
 	}
 }

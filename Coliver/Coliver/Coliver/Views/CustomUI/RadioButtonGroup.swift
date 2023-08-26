@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct RadioButtonGroup<Tag: TitledObjectProtocol>: View {
+struct RadioButtonGroup<Tag: TitledProtocol>: View {
 	
 	// MARK: Types
 	

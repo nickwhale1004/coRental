@@ -68,10 +68,7 @@ final class ImageService: ImageServiceProtocol {
 			return Fail(error: URLError(.badURL)).eraseToAnyPublisher()
 		}
 		
-		var request = URLRequest(url: url)
-		request.httpMethod = "GET"
-		
-		return URLSession.shared.dataTaskPublisher(for: request)
+		return URLSession.shared.dataTaskPublisher(for: url)
 			.tryMap { data, response -> Data in
 				guard
 					let httpResponse = response as? HTTPURLResponse,

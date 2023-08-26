@@ -12,7 +12,7 @@ enum UserFindStatus: Int, CaseIterable, Codable {
 	case placeAndFriend
 }
 
-extension UserFindStatus: TitledObjectProtocol {
+extension UserFindStatus: TitledProtocol {
 	var title: String {
 		switch self {
 		case .friend:

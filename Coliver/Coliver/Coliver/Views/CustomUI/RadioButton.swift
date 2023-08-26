@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct RadioButton<Tag: TitledObjectProtocol>: View {
+struct RadioButton<Tag: TitledProtocol>: View {
 	let tag: Tag
 	@Binding var selection: Tag
 	

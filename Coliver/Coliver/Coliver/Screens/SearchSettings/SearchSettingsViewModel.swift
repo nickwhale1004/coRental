@@ -78,7 +78,8 @@ final class SearchSettingsViewModel: ObservableObject {
 	private var state: State = .hasLivingNotChecked
 	private(set) var stateMachine = StateMachine<State, Event>(state: .hasLivingNotChecked)
 	
-	private var user: Binding<UserModel?>
+	private var user: UserModel?
+	private var userBinding: Binding<UserModel?>?
 	private var imageURL: String?
 	
 	private var cancellables = [AnyCancellable]()
@@ -98,10 +99,11 @@ final class SearchSettingsViewModel: ObservableObject {
 		
 		switch mode {
 		case let .completeRegistration(model):
-			user = Binding<UserModel?>(get: { return model }, set: { _ in })
+			user = model
 			
 		case let .searchSettings(model):
-			user = model
+			user = model.wrappedValue
+			userBinding = model
 		}
 		
 		setupDefaultFields()
@@ -121,18 +123,18 @@ final class SearchSettingsViewModel: ObservableObject {
 	}
 	
 	private func goNext() {
-		guard let user = user.wrappedValue else { return }
+		updateUser()
+		guard let user else { return }
 		
 		if case .completeRegistration = mode {
 			router?.showRegister(user)
 		} else {
-			updateUser()
 			saveUser()
 		}
 	}
 	
 	private func saveUser() {
-		guard let user = user.wrappedValue else { return }
+		guard let user else { return }
 		
 		userService.updateUser(user)
 			.receive(on: DispatchQueue.main)
@@ -204,7 +206,7 @@ final class SearchSettingsViewModel: ObservableObject {
 	private func updateUser(){
 		if selection == .friend {
 			let house = HouseModel(address: hasAddress, price: hasCost ?? 0, imageURL: imageURL)
-			user.wrappedValue?.house = house
+			user?.house = house
 		}
 		let search = SearchModel(
 			type: selection,
@@ -214,7 +216,8 @@ final class SearchSettingsViewModel: ObservableObject {
 			housePriceFrom: findCostFrom,
 			housePriceTo: findCostTo
 		)
-		user.wrappedValue?.search = search
+		user?.search = search
+		userBinding?.wrappedValue = user
 	}
 	
 	private func uploadImage(_ completion: @escaping () -> Void) {
@@ -232,10 +235,8 @@ final class SearchSettingsViewModel: ObservableObject {
 					guard case .failure = result else { return }
 					print("Error upldoded image")
 					
-				} receiveValue: { [weak self] url in
-					guard let self else { return }
-					
-					imageURL = url
+				} receiveValue: { url in
+					self.imageURL = url
 					completion()
 				}
 				.store(in: &cancellables)
@@ -243,18 +244,18 @@ final class SearchSettingsViewModel: ObservableObject {
 	}
 	
 	private func setupDefaultFields() {
-		selection = user.wrappedValue?.search?.type ?? .placeAndFriend
+		selection = user?.search?.type ?? .placeAndFriend
 		
-		ageFrom = user.wrappedValue?.search?.userAgeFrom
-		ageTo = user.wrappedValue?.search?.userAgeTo
-		gender = user.wrappedValue?.search?.userGender
+		ageFrom = user?.search?.userAgeFrom
+		ageTo = user?.search?.userAgeTo
+		gender = user?.search?.userGender
 		
-		findCostFrom = user.wrappedValue?.search?.housePriceFrom
-		findCostTo = user.wrappedValue?.search?.housePriceTo
+		findCostFrom = user?.search?.housePriceFrom
+		findCostTo = user?.search?.housePriceTo
 		
-		hasAddress = user.wrappedValue?.house?.address ?? ""
-		hasCost = user.wrappedValue?.house?.price
-		imageURL = user.wrappedValue?.house?.imageURL
+		hasAddress = user?.house?.address ?? ""
+		hasCost = user?.house?.price
+		imageURL = user?.house?.imageURL
 		
 		if let imageURL {
 			imageService.downloadImage(imageURL)

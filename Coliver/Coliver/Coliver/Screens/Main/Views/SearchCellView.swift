@@ -25,7 +25,7 @@ struct SearchCellView: View {
 			
 			if viewModel.address != nil {
 				VStack(alignment: .center, spacing: 10) {
-					AsyncImage(url: viewModel.imageURL) { image in
+					AsyncCachedImage(url: viewModel.imageURL) { image in
 						image
 							.resizable()
 							.scaledToFit()

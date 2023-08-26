@@ -1,10 +1,10 @@
 //
-//  TitledObjectProtocol.swift
+//  TitledProtocol.swift
 //  Coliver
 //
 //  Created by Никита Шляхов on 20.05.2023.
 //
 
-protocol TitledObjectProtocol: Hashable, Equatable {
+protocol TitledProtocol: Hashable, Equatable {
 	var title: String { get }
 }

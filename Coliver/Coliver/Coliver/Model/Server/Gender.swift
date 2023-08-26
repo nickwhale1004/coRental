@@ -12,7 +12,7 @@ enum Gender: Int, Codable, CaseIterable {
 	case female
 }
 
-extension Gender: TitledObjectProtocol {
+extension Gender: TitledProtocol {
 	var title: String {
 		switch self {
 		case .female:

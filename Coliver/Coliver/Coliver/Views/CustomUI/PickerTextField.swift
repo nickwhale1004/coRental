@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct PickerTextField<Tag: TitledObjectProtocol>: View {
+struct PickerTextField<Tag: TitledProtocol>: View {
 	
 	// MARK: - Properties
 	
