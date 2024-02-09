@@ -8,17 +8,18 @@
 import Foundation
 
 final class SearchCellViewModel: ObservableObject, Identifiable {
-	let id = UUID()
+    let id: Int
 	
 	@Published var name: String
 	@Published var age: Int
 	@Published var about: String
 	
-	@Published var imageURL: String?
+	@Published var imageUrl: String?
 	@Published var address: String?
 	@Published var price: Int?
 	
 	init(_ model: UserModel) {
+        id = model.id ?? -1
 		name = model.firstName + " " + model.lastName
 		age = model.age
 		about = model.about ?? ""
@@ -26,6 +27,6 @@ final class SearchCellViewModel: ObservableObject, Identifiable {
 		address = model.house?.address
 		price = model.house?.price
 		
-		imageURL = model.house?.imageURL
+		imageUrl = model.house?.imageUrl
 	}
 }

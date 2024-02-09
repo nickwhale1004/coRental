@@ -1,6 +1,7 @@
 import os
 import sqlite3
 import uuid
+from datetime import datetime
 
 import jwt
 from flask import Flask, request, jsonify, send_file
@@ -8,6 +9,7 @@ from flask import Flask, request, jsonify, send_file
 app = Flask(__name__)
 app.config['SECRET_KEY'] = '8VDmUhXEtmAYYLh1tRNpCsbFstyIZD'
 app.config['DATABASE'] = 'users.db'
+
 
 def get_db_connection():
     conn = sqlite3.connect(app.config['DATABASE'])
@@ -22,9 +24,9 @@ def create_tables():
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS UserModel (
             id INTEGER PRIMARY KEY,
-            firstName VARCHAR(50),
-            lastName VARCHAR(50),
-            thirdName VARCHAR(50),
+            first_name VARCHAR(50),
+            last_name VARCHAR(50),
+            third_name VARCHAR(50),
             age INTEGER,
             gender INTEGER,
             about VARCHAR(100)
@@ -45,11 +47,11 @@ def create_tables():
         CREATE TABLE IF NOT EXISTS SearchModel (
             id INTEGER PRIMARY KEY,
             type INTEGER,
-            userAgeFrom INTEGER,
-            userAgeTo INTEGER,
-            userGender INTEGER,
-            housePriceFrom INTEGER,
-            housePriceTo INTEGER,
+            user_age_from INTEGER,
+            user_age_to INTEGER,
+            user_gender INTEGER,
+            house_price_from INTEGER,
+            house_price_to INTEGER,
             user_id INTEGER,
             FOREIGN KEY (user_id) REFERENCES UserModel (id)
         )
@@ -60,9 +62,31 @@ def create_tables():
             id INTEGER PRIMARY KEY,
             address VARCHAR(100),
             price INTEGER,
-            imageURL VARCHAR(200),
+            image_url VARCHAR(200),
             user_id INTEGER,
             FOREIGN KEY (user_id) REFERENCES UserModel (id)
+        )
+    """)
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS ChatModel (
+            id INTEGER PRIMARY KEY,
+            user_id1 INTEGER,
+            user_id2 INTEGER,
+            FOREIGN KEY (user_id1) REFERENCES UserModel (id),
+            FOREIGN KEY (user_id2) REFERENCES UserModel (id)
+        )
+    """)
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS MessageModel (
+            id INTEGER PRIMARY KEY,
+            chat_id INTEGER,
+            sender_id INTEGER,
+            message_text TEXT,
+            timestamp DATETIME,
+            FOREIGN KEY (chat_id) REFERENCES ChatModel (id),
+            FOREIGN KEY (sender_id) REFERENCES UserModel (id)
         )
     """)
 
@@ -78,15 +102,15 @@ def register():
     cursor = conn.cursor()
 
     new_user = (
-        data.get('user').get('firstName'),
-        data.get('user').get('lastName'),
-        data.get('user').get('thirdName'),
+        data.get('user').get('first_name'),
+        data.get('user').get('last_name'),
+        data.get('user').get('third_name'),
         data.get('user').get('age'),
         data.get('user').get('gender'),
         data.get('user').get('about')
     )
     cursor.execute("""
-        INSERT INTO UserModel (firstName, lastName, thirdName, age, gender, about)
+        INSERT INTO UserModel (first_name, last_name, third_name, age, gender, about)
         VALUES (?, ?, ?, ?, ?, ?)
     """, new_user)
     user_id = cursor.lastrowid
@@ -105,26 +129,26 @@ def register():
         new_house = (
             data.get('user').get("house").get("address"),
             data.get('user').get("house").get("price"),
-            data.get('user').get("house").get("imageURL"),
+            data.get('user').get("house").get("image_url"),
             user_id
         )
         cursor.execute("""
-               INSERT INTO HouseModel (address, price, imageURL, user_id)
+               INSERT INTO HouseModel (address, price, image_url, user_id)
                VALUES (?, ?, ?, ?)
            """, new_house)
 
     if data.get('user').get("search"):
         new_search = (
             data.get('user').get("search").get("type"),
-            data.get('user').get("search").get("userAgeFrom"),
-            data.get('user').get("search").get("userAgeTo"),
-            data.get('user').get("search").get("userGender"),
-            data.get('user').get("search").get("housePriceFrom"),
-            data.get('user').get("search").get("housePriceTo"),
+            data.get('user').get("search").get("user_age_from"),
+            data.get('user').get("search").get("user_age_to"),
+            data.get('user').get("search").get("user_gender"),
+            data.get('user').get("search").get("house_price_from"),
+            data.get('user').get("search").get("house_price_to"),
             user_id
         )
         cursor.execute("""
-                       INSERT INTO SearchModel (type, userAgeFrom, userAgeTo, userGender, housePriceFrom, housePriceTo, user_id)
+                       INSERT INTO SearchModel (type, user_age_from, user_age_to, user_gender, house_price_from, house_price_to, user_id)
                        VALUES (?, ?, ?, ?, ?, ?, ?)
                    """, new_search)
 
@@ -234,9 +258,9 @@ def get_user_data():
 
         if user:
             user_data = {
-                'firstName': user[1],
-                'lastName': user[2],
-                'thirdName': user[3],
+                'first_name': user[1],
+                'last_name': user[2],
+                'third_name': user[3],
                 'age': user[4],
                 'gender': user[5],
                 'about': user[6]
@@ -249,7 +273,7 @@ def get_user_data():
                 house_data = {
                     'address': house[1],
                     'price': house[2],
-                    'imageURL': house[3]
+                    'image_url': house[3]
                 }
                 user_data['house'] = house_data
 
@@ -259,11 +283,11 @@ def get_user_data():
             if search:
                 search_data = {
                     'type': search[1],
-                    'userAgeFrom': search[2],
-                    'userAgeTo': search[3],
-                    'userGender': search[4],
-                    'housePriceFrom': search[5],
-                    'housePriceTo': search[6]
+                    'user_age_from': search[2],
+                    'user_age_to': search[3],
+                    'user_gender': search[4],
+                    'house_price_from': search[5],
+                    'house_price_to': search[6]
                 }
                 user_data['search'] = search_data
 
@@ -295,17 +319,17 @@ def update_user_data():
 
         cursor.execute("""
             UPDATE UserModel
-            SET firstName = ?,
-                lastName = ?,
-                thirdName = ?,
+            SET first_name = ?,
+                last_name = ?,
+                third_name = ?,
                 age = ?,
                 gender = ?,
                 about = ?
             WHERE id = ?
         """, (
-            new_user_data.get('firstName'),
-            new_user_data.get('lastName'),
-            new_user_data.get('thirdName'),
+            new_user_data.get('first_name'),
+            new_user_data.get('last_name'),
+            new_user_data.get('third_name'),
             new_user_data.get('age'),
             new_user_data.get('gender'),
             new_user_data.get('about'),
@@ -321,19 +345,19 @@ def update_user_data():
                 UPDATE HouseModel
                 SET address = ?,
                     price = ?,
-                    imageURL = ?
+                    image_url = ?
                 WHERE user_id = ?
             """
             if not houses:
                 sql = """
-                    INSERT INTO HouseModel (address, price, imageURL, user_id)
+                    INSERT INTO HouseModel (address, price, image_url, user_id)
                     VALUES (?, ?, ?, ?)
                 """
 
             cursor.execute(sql, (
                 house_data.get('address'),
                 house_data.get('price'),
-                house_data.get('imageURL'),
+                house_data.get('image_url'),
                 user_id
             ))
 
@@ -342,19 +366,19 @@ def update_user_data():
             cursor.execute("""
                 UPDATE SearchModel
                 SET type = ?,
-                    userAgeFrom = ?,
-                    userAgeTo = ?,
-                    userGender = ?,
-                    housePriceFrom = ?,
-                    housePriceTo = ?
+                    user_age_from = ?,
+                    user_age_to = ?,
+                    user_gender = ?,
+                    house_price_from = ?,
+                    house_price_to = ?
                 WHERE user_id = ?
             """, (
                 search_data.get('type'),
-                search_data.get('userAgeFrom'),
-                search_data.get('userAgeTo'),
-                search_data.get('userGender'),
-                search_data.get('housePriceFrom'),
-                search_data.get('housePriceTo'),
+                search_data.get('user_age_from'),
+                search_data.get('user_age_to'),
+                search_data.get('user_gender'),
+                search_data.get('house_price_from'),
+                search_data.get('house_price_to'),
                 user_id
             ))
 
@@ -393,11 +417,11 @@ def search_users():
         return jsonify({'message': 'Search parameters not found for the user.'}), 404
 
     search_type = search_data['type']
-    user_age_from = search_data['userAgeFrom']
-    user_age_to = search_data['userAgeTo']
-    user_gender = search_data['userGender']
-    house_price_from = search_data['housePriceFrom']
-    house_price_to = search_data['housePriceTo']
+    user_age_from = search_data['user_age_from']
+    user_age_to = search_data['user_age_to']
+    user_gender = search_data['user_gender']
+    house_price_from = search_data['house_price_from']
+    house_price_to = search_data['house_price_to']
 
     sql_query = "SELECT UserModel.*, HouseModel.* FROM UserModel LEFT JOIN HouseModel ON UserModel.id = HouseModel.user_id WHERE 1=1"
     params = []
@@ -450,6 +474,171 @@ def search_users():
     return jsonify({'users': matched_users})
 
 
+@app.route('/createChat', methods=['POST'])
+def create_chat():
+    data = request.json
+    token = data.get('token')
+    user_id2 = data.get('user_id')
+
+    try:
+        payload = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
+        user_id1 = payload['user_id']
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        cursor.execute("SELECT * FROM UserModel WHERE id = ?", (user_id1,))
+        user1 = cursor.fetchone()
+
+        cursor.execute("SELECT * FROM UserModel WHERE id = ?", (user_id2,))
+        user2 = cursor.fetchone()
+
+        if user1 and user2:
+            cursor.execute("""
+                SELECT * FROM ChatModel
+                WHERE (user_id1 = ? AND user_id2 = ?) OR (user_id1 = ? AND user_id2 = ?)
+            """, (user_id1, user_id2, user_id2, user_id1))
+
+            existing_chat = cursor.fetchone()
+
+            if not existing_chat:
+                cursor.execute("INSERT INTO ChatModel (user_id1, user_id2) VALUES (?, ?)", (user_id1, user_id2))
+                conn.commit()
+                conn.close()
+                return jsonify({'message': 'Chat created successfully'})
+            else:
+                conn.close()
+                return jsonify({'message': 'Chat already exists'})
+        else:
+            conn.close()
+            return jsonify({'message': 'User not found'})
+
+    except jwt.ExpiredSignatureError:
+        return jsonify({'message': 'Token expired'})
+
+    except jwt.InvalidTokenError:
+        return jsonify({'message': 'Invalid token'})
+
+
+@app.route('/getChats', methods=['POST'])
+def get_chats():
+    data = request.json
+    token = data.get('token')
+
+    try:
+        payload = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
+        user_id = payload['user_id']
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            SELECT ChatModel.id,
+       UserModel.first_name,
+       UserModel.last_name,
+       MessageModel.message_text,
+       MessageModel.timestamp
+FROM ChatModel
+JOIN UserModel ON ((ChatModel.user_id1 = UserModel.id AND ChatModel.user_id2 = ?) OR
+                   (ChatModel.user_id2 = UserModel.id AND ChatModel.user_id1 = ?))
+LEFT JOIN (
+    SELECT chat_id, MAX(timestamp) AS max_timestamp
+    FROM MessageModel
+    GROUP BY chat_id
+) AS LatestMessage ON ChatModel.id = LatestMessage.chat_id
+LEFT JOIN MessageModel ON LatestMessage.chat_id = MessageModel.chat_id AND LatestMessage.max_timestamp = MessageModel.timestamp
+WHERE ChatModel.user_id1 = ? OR ChatModel.user_id2 = ?
+        """, (user_id, user_id, user_id,user_id))
+
+        chats = cursor.fetchall()
+        chat_list = []
+
+        for chat in chats:
+            timestamp = None
+            if chat[4]:
+                timestamp = datetime.strptime(chat[4], '%Y-%m-%d %H:%M:%S').isoformat() + 'Z'
+
+            chat_data = {
+                'id': chat[0],
+                'user_name': f'{chat[1]} {chat[2]}',
+                'last_message': chat[3],
+                'timestamp': timestamp
+            }
+            chat_list.append(chat_data)
+
+        conn.close()
+        return jsonify({'chats': chat_list})
+
+    except jwt.ExpiredSignatureError:
+        return jsonify({'message': 'Token expired'})
+
+    except jwt.InvalidTokenError:
+        return jsonify({'message': 'Invalid token'})
+
+
+@app.route('/getMessages', methods=['POST'])
+def get_messages():
+    data = request.json
+    token = data.get('token')
+    chat_id = data.get('chat_id')
+    page = data.get('page', 1)  # Номер страницы, по умолчанию 1
+    messages_per_page = 10
+
+    try:
+        # Декодируем токен для определения пользователя
+        payload = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
+        user_id = payload['user_id']
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        # Проверяем, что пользователь имеет доступ к этому чату
+        cursor.execute("""
+            SELECT 1 FROM ChatModel WHERE id = ? AND (user_id1 = ? OR user_id2 = ?)
+        """, (chat_id, user_id, user_id))
+
+        chat_exists = cursor.fetchone()
+
+        if chat_exists:
+            # Вычисляем смещение для запроса сообщений в зависимости от страницы
+            offset = (page - 1) * messages_per_page
+
+            # Получаем список сообщений в чате
+            cursor.execute("""
+                SELECT MessageModel.id, UserModel.first_name, UserModel.last_name, MessageModel.message_text, MessageModel.timestamp
+                FROM MessageModel
+                JOIN UserModel ON MessageModel.sender_id = UserModel.id
+                WHERE MessageModel.chat_id = ?
+                ORDER BY MessageModel.timestamp DESC
+                LIMIT ? OFFSET ?
+            """, (chat_id, messages_per_page, offset))
+
+            messages = cursor.fetchall()
+            message_list = []
+
+            for message in messages:
+                message_data = {
+                    'id': message[0],
+                    'user_name': f'{message[1]} {message[2]}',
+                    'message_text': message[3],
+                    'timestamp': datetime.strptime(message[4], '%Y-%m-%d %H:%M:%S').isoformat() + 'Z'
+                }
+                message_list.append(message_data)
+
+            conn.close()
+            return jsonify({'messages': message_list})
+        else:
+            conn.close()
+            return jsonify({'message': 'Access denied to this chat'})
+
+    except jwt.ExpiredSignatureError:
+        return jsonify({'message': 'Token expired'})
+
+    except jwt.InvalidTokenError:
+        return jsonify({'message': 'Invalid token'})
+
+
 if __name__ == '__main__':
     create_tables()
+
     app.run()

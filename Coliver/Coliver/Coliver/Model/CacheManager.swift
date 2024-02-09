@@ -15,9 +15,7 @@ final class CacheManager: CacheManagerProtocol {
 	
 	// MARK: - Properties
 	
-	private let url: URL = {
-		FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
-	}()
+	private let url = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
 	
 	// MARK: - Subscript
 	

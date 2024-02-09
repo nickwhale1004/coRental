@@ -10,5 +10,5 @@ import Foundation
 struct HouseModel: Codable, Hashable {
 	var address: String
 	var price: Int
-	var imageURL: String?
+	var imageUrl: String?
 }

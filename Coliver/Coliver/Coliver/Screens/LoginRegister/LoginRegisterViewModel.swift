@@ -122,41 +122,31 @@ final class LoginRegisterViewModel: ObservableObject {
 	}
 	
 	private func login() {
-		authManager.login(login: email, password: password)
-			.receive(on: DispatchQueue.main)
-			.sink { [weak self] completion in
-				guard let self, case let .failure(error) = completion else { return }
-				
-				print("Неуспешная авторизация: \(error)")
-				stateMachine.tryEvent(.unvalidated(email: true, password: true, passwordRepeat: true))
-				
-			} receiveValue: { [weak self] token in
-				guard let self else { return }
-				
-				print("Успешная авторизация. Токен:", token)
-				stateMachine.tryEvent(.authed)
-			}
-			.store(in: &cancellables)
+        Task { @MainActor in
+            do {
+                let token = try await authManager.login(login: email, password: password)
+                print("Успешная авторизация. Токен:", token)
+                stateMachine.tryEvent(.authed)
+            } catch {
+                print("Неуспешная авторизация: \(error)")
+                stateMachine.tryEvent(.unvalidated(email: true, password: true, passwordRepeat: true))
+            }
+        }
 	}
 	
 	private func register() {
 		guard case let .register(user) = mode else { return }
 		
-		authManager.register(user, login: email, password: password)
-			.receive(on: DispatchQueue.main)
-			.sink { [weak self] completion in
-				guard let self, case let .failure(error) = completion else { return }
-				
-				print("Неуспешная регистрация: \(error)")
-				stateMachine.tryEvent(.unvalidated(email: true, password: true, passwordRepeat: true))
-				
-			} receiveValue: { [weak self] token in
-				guard let self else { return }
-				
-				print("Успешная регистрация. Токен:", token)
-				stateMachine.tryEvent(.authed)
-			}
-			.store(in: &cancellables)
+        Task { @MainActor in
+            do {
+                let token = try await authManager.register(user, login: email, password: password)
+                print("Успешная регистрация. Токен:", token)
+                stateMachine.tryEvent(.authed)
+            } catch {
+                print("Неуспешная регистрация: \(error)")
+                stateMachine.tryEvent(.unvalidated(email: true, password: true, passwordRepeat: true))
+            }
+        }
 	}
 }
 

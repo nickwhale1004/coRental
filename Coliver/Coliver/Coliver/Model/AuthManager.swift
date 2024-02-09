@@ -9,20 +9,16 @@ import Foundation
 import Combine
 
 protocol AuthManagerProtocol {
-	func login(login: String, password: String) -> AnyPublisher<String, Error>
-	func register(_ user: UserModel, login: String, password: String) -> AnyPublisher<String, Error>
-	func checkToken() -> AnyPublisher<Bool, Never>
+	var token: String? { get }
+	
+    func login(login: String, password: String) async throws -> String
+    func register(_ user: UserModel, login: String, password: String) async throws -> String
+    func checkToken() async -> Bool
 }
 
 final class AuthManager: AuthManagerProtocol {
 	
 	// MARK: - Types
-	
-	enum AuthStatus {
-		case notDefined
-		case authed
-		case needLogin
-	}
 	
 	private enum Constants {
 		static let isFirstLaunch = "isFirstLaunch"
@@ -33,11 +29,9 @@ final class AuthManager: AuthManagerProtocol {
 	
 	static let shared = AuthManager()
 	
-	var isAuth: AuthStatus = .notDefined
 	private(set) var token: String?
 	
 	private let authService: AuthServiceProtocol
-	private var cancellables: Set<AnyCancellable> = []
 	
 	// MARK: - Initialization
 	
@@ -48,75 +42,33 @@ final class AuthManager: AuthManagerProtocol {
 	
 	// MARK: - Methods
 	
-	func login(login: String, password: String) -> AnyPublisher<String, Error> {
-		return Future<String, Error> { [weak self] promise in
-			guard let self else { return }
-			
-			authService.login(login: login, password: password)
-				.receive(on: DispatchQueue.main)
-				.sink { completion in
-					if case let .failure(error) = completion {
-						promise(.failure(error))
-					}
-				} receiveValue: { token in
-					self.token = token
-					self.saveTokenToKeychain(token)
-					promise(.success(token))
-				}
-				.store(in: &cancellables)
-		}
-		.eraseToAnyPublisher()
+	func login(login: String, password: String) async throws -> String {
+        token = try await authService.login(login: login, password: password)
+        saveTokenToKeychain(token!)
+        return token!
 	}
 	
-	func register(_ user: UserModel, login: String, password: String) -> AnyPublisher<String, Error> {
-		return Future<String, Error> { [weak self] promise in
-			guard let self else { return }
-			
-			authService.register(user: user, login: login, password: password)
-				.receive(on: DispatchQueue.main)
-				.sink { completion in
-					if case let .failure(error) = completion {
-						promise(.failure(error))
-					}
-				} receiveValue: { token in
-					self.token = token
-					self.saveTokenToKeychain(token)
-					promise(.success(token))
-				}
-				.store(in: &cancellables)
-		}
-		.eraseToAnyPublisher()
+	func register(_ user: UserModel, login: String, password: String) async throws -> String {
+        token = try await authService.register(user: user, login: login, password: password)
+        saveTokenToKeychain(token!)
+        return token!
 	}
 	
-	
-	func checkToken() -> AnyPublisher<Bool, Never> {
-		return Future<Bool, Never> { [weak self] promise in
-			guard
-				let self,
-				let token = getTokenFromKeychain()
-			else {
-				print("Token not found")
-				return
-			}
-			
-			authService.checkToken(token)
-				.receive(on: DispatchQueue.main)
-				.sink { completion in
-					if case let .failure(error) = completion {
-						print("Token Verification Error:", error)
-					}
-				} receiveValue: { isValid in
-					if isValid {
-						self.token = token
-						self.isAuth = .authed
-					} else {
-						self.isAuth = .needLogin
-					}
-					promise(.success(self.isAuth == .authed))
-				}
-				.store(in: &cancellables)
-		}
-		.eraseToAnyPublisher()
+	func checkToken() async -> Bool {
+        guard let token = getTokenFromKeychain() else {
+            print("Token not found")
+            return false
+        }
+        do {
+            if try await authService.checkToken(token) {
+                self.token = token
+            }
+            return true
+        } catch {
+            print("Token Verification Error:", error)
+            clearKeychain()
+            return false
+        }
 	}
 	
 	private func checkFirstLaunch() {

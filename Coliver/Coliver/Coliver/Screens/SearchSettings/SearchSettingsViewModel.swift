@@ -64,7 +64,7 @@ final class SearchSettingsViewModel: ObservableObject {
 	
 	private var user: UserModel?
 	private var userBinding: Binding<UserModel?>?
-	private var imageURL: String?
+	private var imageUrl: String?
 	
 	private var cancellables = [AnyCancellable]()
 	private let imageService: ImageServiceProtocol
@@ -95,12 +95,17 @@ final class SearchSettingsViewModel: ObservableObject {
 	}
 	
 	// MARK: - Methods
+    
+    func onAppear() {
+        setupDefaultFields()
+    }
 	
 	func saveButtonPressed(isEnabled: Bool) {
 		if isEnabled {
-			uploadImage { [weak self] in
-				self?.goNext()
-			}
+            Task { @MainActor in
+                await uploadImage()
+                goNext()
+            }
 		} else {
 			validate()
 		}
@@ -119,18 +124,15 @@ final class SearchSettingsViewModel: ObservableObject {
 	
 	private func saveUser() {
 		guard let user else { return }
-		
-		userService.updateUser(user)
-			.receive(on: DispatchQueue.main)
-			.sink { [weak self] completion in
-				guard let self, case .failure = completion else { return }
-				stateMachine.tryEvent(.error)
-				
-			} receiveValue: { [weak self] _ in
-				guard let self else { return }
-				stateMachine.tryEvent(.saved)
-			}
-			.store(in: &cancellables)
+        
+        Task { @MainActor in
+            do {
+                try await userService.updateUser(user)
+                stateMachine.tryEvent(.saved)
+            } catch {
+                stateMachine.tryEvent(.error)
+            }
+        }
 	}
 	
 	private func setupStateMachine() {
@@ -192,7 +194,7 @@ final class SearchSettingsViewModel: ObservableObject {
 	
 	private func updateUser(){
 		if selection == .friend {
-			let house = HouseModel(address: hasAddress, price: hasCost ?? 0, imageURL: imageURL)
+			let house = HouseModel(address: hasAddress, price: hasCost ?? 0, imageUrl: imageUrl)
 			user?.house = house
 		}
 		let search = SearchModel(
@@ -209,27 +211,13 @@ final class SearchSettingsViewModel: ObservableObject {
 		}
 	}
 	
-	private func uploadImage(_ completion: @escaping () -> Void) {
-		DispatchQueue.global(qos: .userInitiated).async { [weak self] in
-			guard
-				let self,
-				let data = selectedImage?.pngData()
-			else {
-				self?.goNext()
-				return
-			}
-			imageService.uploadImage(data)
-				.receive(on: DispatchQueue.main)
-				.sink { result in
-					guard case .failure = result else { return }
-					print("Error upldoded image")
-					
-				} receiveValue: { url in
-					self.imageURL = url
-					completion()
-				}
-				.store(in: &cancellables)
-		}
+	private func uploadImage() async {
+        guard let data = selectedImage?.pngData() else { return }
+        do {
+            imageUrl = try await imageService.uploadImage(data)
+        } catch {
+            print("Error upldoded image")
+        }
 	}
 	
 	private func setupDefaultFields() {
@@ -244,21 +232,17 @@ final class SearchSettingsViewModel: ObservableObject {
 		
 		hasAddress = user?.house?.address ?? ""
 		hasCost = user?.house?.price
-		imageURL = user?.house?.imageURL
+		imageUrl = user?.house?.imageUrl
 		
-		if let imageURL {
-			imageService.downloadImage(imageURL)
-				.receive(on: DispatchQueue.main)
-				.sink { [weak self] completion in
-					guard let self, case .failure = completion else { return }
-					stateMachine.tryEvent(.error)
-					
-				} receiveValue: { [weak self] data in
-					guard let self else { return }
-					selectedImage = UIImage(data: data)
-				}
-				.store(in: &cancellables)
-		}
+        if let imageUrl {
+            Task { @MainActor in
+                do {
+                    selectedImage = try await imageService.downloadImage(imageUrl)
+                } catch {
+                    stateMachine.tryEvent(.error)
+                }
+            }
+        }
 	}
 }
 

@@ -15,6 +15,10 @@ struct MainView: View {
 			switch viewModel.state {
 			case .loaded:
 				TabView {
+                    ChatListView()
+                        .tabItem {
+                            Label("Chats", systemImage: "message")
+                        }
 					SearchSettingsView(mode: .searchSettings(profile: $viewModel.userModel))
 						.tabItem {
 							Label("Settings", systemImage: "person.2.badge.gearshape")

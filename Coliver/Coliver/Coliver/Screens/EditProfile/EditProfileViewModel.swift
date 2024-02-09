@@ -119,7 +119,7 @@ final class EditProfileViewModel: ObservableObject {
 			validate()
 		} else {
 			let user = UserModel(
-				firstName: firstName,
+                firstName: firstName,
 				lastName: lastName,
 				thirdName: thirdName,
 				age: age ?? 0,
@@ -156,17 +156,14 @@ final class EditProfileViewModel: ObservableObject {
 	private func saveUser() {
 		guard case let .edit(profile) = mode, let user = profile.wrappedValue else { return }
 		
-		userService.updateUser(user)
-					.receive(on: DispatchQueue.main)
-					.sink{ [weak self] completion in
-						guard let self, case .failure = completion else { return }
-						stateMachine.tryEvent(.error)
-						
-					} receiveValue: { [weak self] _ in
-						guard let self else { return }
-						stateMachine.tryEvent(.saved)
-					}
-					.store(in: &cancellables)
+        Task { @MainActor in
+            do {
+                try await userService.updateUser(user)
+                stateMachine.tryEvent(.saved)
+            } catch {
+                stateMachine.tryEvent(.error)
+            }
+        }
 	}
 	
 	private func setupStateMachine() {

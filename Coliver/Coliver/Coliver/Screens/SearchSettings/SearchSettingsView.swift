@@ -63,6 +63,7 @@ struct SearchSettingsView: View {
 		}
 		.onAppear {
 			viewModel.router = router
+            viewModel.onAppear()
 		}
 		.navigationTitle("Завершение")
 		.navigationBarTitleDisplayMode(.large)

@@ -13,6 +13,7 @@ enum Route: Hashable {
 	case register(_ user: UserModel)
 	case completeRegistration(_ user: UserModel)
 	case main
+    case chat(id: Int)
 }
 
 final class Router: ObservableObject {
@@ -52,4 +53,10 @@ final class Router: ObservableObject {
 	func back() {
 		path.removeLast()
 	}
+    
+    // MARK: - Chat
+    
+    func showChat(id: Int) {
+        path.append(.chat(id: id))
+    }
 }

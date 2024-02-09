@@ -43,18 +43,12 @@ final class AsyncCachedImageViewModel: ObservableObject {
 		if let cacheImage = cacheManager[url] {
 			image = cacheImage
 		}
-		imageService.downloadImage(url)
-			.receive(on: DispatchQueue.main)
-			.sink { [weak self] completion in
-				guard let self, case .failure = completion else { return }
-				image = nil
-				
-			} receiveValue: { [weak self] data in
-				guard let self else { return }
-				
-				image = UIImage(data: data)
-				cacheManager[url] = image
-			}
-			.store(in: &cancellables)
+        Task { @MainActor in
+            do {
+                cacheManager[url] = try await imageService.downloadImage(url)
+            } catch {
+                image = nil
+            }
+        }
 	}
 }

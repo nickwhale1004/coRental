@@ -38,6 +38,7 @@ final class SearchViewModel: ObservableObject {
 	@Published var text: String = ""
 	
 	private let userService: UserServiceProtocol
+    private let chatService: ChatServiceProtocol
 	private var lastLoadedUser: UserModel?
 	private var userBinding: Binding<UserModel?>
 	
@@ -45,10 +46,12 @@ final class SearchViewModel: ObservableObject {
 	
 	init(
 		userBinding: Binding<UserModel?>,
-		userService: UserServiceProtocol = UserService()
+		userService: UserServiceProtocol = UserService(),
+        chatService: ChatServiceProtocol = ChatService()
 	) {
 		self.userBinding = userBinding
 		self.userService = userService
+        self.chatService = chatService
 		
 		stateMachine.reducer = self
 		stateMachine.statePublisher
@@ -79,23 +82,28 @@ final class SearchViewModel: ObservableObject {
 	func search() {
 		guard userBinding.wrappedValue != lastLoadedUser else { return }
 		stateMachine.tryEvent(.loading)
-		
-		userService.search()
-			.receive(on: DispatchQueue.main)
-			.sink { [weak self] completion in
-				guard let self, case .failure = completion else { return }
-				stateMachine.tryEvent(.error)
-				
-			} receiveValue: { [weak self] userModels in
-				guard let self else { return }
-				
-				cellViewModels = userModels.map { SearchCellViewModel($0) }
-				stateMachine.tryEvent(self.cellViewModels.isEmpty ? .empty : .loaded)
-			}
-			.store(in: &cancellables)
-		
+        
+        Task { @MainActor in
+            do {
+                let userModels = try await userService.search()
+                cellViewModels = userModels.map { SearchCellViewModel($0) }
+                stateMachine.tryEvent(self.cellViewModels.isEmpty ? .empty : .loaded)
+            } catch {
+                stateMachine.tryEvent(.error)
+            }
+        }
 		lastLoadedUser = userBinding.wrappedValue
 	}
+    
+    func cellTapped(_ viewModel: SearchCellViewModel) {
+        Task { @MainActor in
+            do {
+                try await chatService.createChat(userId: viewModel.id)
+            } catch {
+                stateMachine.tryEvent(.error)
+            }
+        }
+    }
 }
 
 // MARK: - StateMachineDelegate

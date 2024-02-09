@@ -24,9 +24,12 @@ struct ColiverApp: App {
 				}
 			} else {
 				SplashView(hasAppLoaded: $viewModel.hasAppLoaded)
-					.onReceive(viewModel.tokenPublisher) { isAuthed in
-						router.rootView = isAuthed ? .main : .welcome
+                    .onReceive(Just(AuthManager.shared.token)) { token in
+						router.rootView = token != nil ? .main : .welcome
 					}
+                    .onAppear {
+                        viewModel.onAppear()
+                    }
 			}
 		}
 	}
@@ -48,7 +51,10 @@ struct ColiverApp: App {
 				
 			case .main:
 				MainView()
-			}
+                
+            case let .chat(id):
+                ChatView(viewModel: ChatViewModel(id: id))
+            }
 		}
 		.environmentObject(router)
 	}

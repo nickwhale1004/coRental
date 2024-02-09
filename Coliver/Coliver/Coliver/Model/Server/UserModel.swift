@@ -8,6 +8,7 @@
 import Foundation
 
 struct UserModel: Codable, Hashable {
+    var id: Int? = nil
 	var firstName: String = ""
 	var lastName: String = ""
 	var thirdName: String?

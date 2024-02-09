@@ -58,19 +58,15 @@ final class MainViewModel: ObservableObject {
 	private func loadUser() {
 		stateMachine.tryEvent(.loading)
 		
-		userService.getUser()
-			.receive(on: DispatchQueue.main)
-			.sink { [weak self] completion in
-				guard let self, case .failure = completion else { return }
-				stateMachine.tryEvent(.error)
-				
-			} receiveValue: { [weak self] model in
-				guard let self else { return }
-				
-				userModel = model
-				stateMachine.tryEvent(.loaded)
-			}
-			.store(in: &cancellables)
+        Task { @MainActor in
+            do {
+                userModel = try await userService.getUser()
+                stateMachine.tryEvent(.loaded)
+            } catch {
+                print(error)
+                stateMachine.tryEvent(.error)
+            }
+        }
 	}
 }
 

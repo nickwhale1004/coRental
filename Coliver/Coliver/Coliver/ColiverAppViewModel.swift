@@ -9,5 +9,10 @@ import Foundation
 
 final class ColiverAppViewModel: ObservableObject {
 	@Published var hasAppLoaded = false
-	@Published var tokenPublisher = AuthManager.shared.checkToken()
+    
+    func onAppear() {
+        Task {
+            await AuthManager.shared.checkToken()
+        }
+    }
 }
