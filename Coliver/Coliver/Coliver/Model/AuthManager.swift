@@ -14,9 +14,11 @@ protocol AuthManagerProtocol {
     func login(login: String, password: String) async throws -> String
     func register(_ user: UserModel, login: String, password: String) async throws -> String
     func checkToken() async -> Bool
+    
+    func logout()
 }
 
-final class AuthManager: AuthManagerProtocol {
+final class AuthManager: AuthManagerProtocol, ObservableObject {
 	
 	// MARK: - Types
 	
@@ -29,7 +31,7 @@ final class AuthManager: AuthManagerProtocol {
 	
 	static let shared = AuthManager()
 	
-	private(set) var token: String?
+	@Published private(set) var token: String?
 	
 	private let authService: AuthServiceProtocol
 	
@@ -70,6 +72,11 @@ final class AuthManager: AuthManagerProtocol {
             return false
         }
 	}
+    
+    func logout() {
+        token = nil
+        clearKeychain()
+    }
 	
 	private func checkFirstLaunch() {
 		let isFirstLaunch = UserDefaults.standard.object(forKey: Constants.isFirstLaunch) as? Bool

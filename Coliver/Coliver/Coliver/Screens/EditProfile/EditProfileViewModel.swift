@@ -99,12 +99,18 @@ final class EditProfileViewModel: ObservableObject {
 	
 	private var valName = Validator(mode: .namePart)
 	private let userService: UserServiceProtocol
+    private let authManager: AuthManagerProtocol
 	
 	// MARK: - Initialzation
 	
-	init(mode: Mode, userService: UserServiceProtocol = UserService()) {
+	init(
+        mode: Mode,
+        userService: UserServiceProtocol = UserService(),
+        authManager: AuthManagerProtocol = AuthManager.shared
+    ) {
 		self.mode = mode
 		self.userService = userService
+        self.authManager = authManager
 		
 		setupDefaultFields()
 		setupStateMachine()
@@ -136,6 +142,10 @@ final class EditProfileViewModel: ObservableObject {
 	func loginButtonPressed(_ isEnabled: Bool) {
 		router?.showLogin()
 	}
+    
+    func logoutTapped() {
+        authManager.logout()
+    }
 	
 	func registerButtonPressed(_ isEnabled: Bool) {
 		if !isEnabled {

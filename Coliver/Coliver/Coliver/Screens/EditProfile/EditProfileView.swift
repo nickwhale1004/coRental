@@ -34,8 +34,6 @@ struct EditProfileView: View {
 		.onAppear {
 			viewModel.router = router
 		}
-		.navigationTitle($viewModel.title)
-		.navigationBarTitleDisplayMode(.large)
 		.toolbarBackground(
 			Color.white,
 			for: .navigationBar
@@ -112,12 +110,17 @@ struct EditProfileView: View {
 	}
 	
 	@ViewBuilder private var saveButton: some View {
-		VStack {
+        VStack(spacing: 16) {
 			Spacer()
-			RoundedButton(
-				text: viewModel.saveButtonTitle,
-				action: viewModel.saveButtonPressed
-			)
+            Button {
+                viewModel.logoutTapped()
+            } label: {
+                Text("Выйти")
+                    .underline()
+            }
+            RoundedButton(text: viewModel.saveButtonTitle) { isEnabled in
+                viewModel.saveButtonPressed(isEnabled)
+            }
 			.enabled(viewModel.isButtonEnabled)
 			.padding(.bottom, 30)
 		}

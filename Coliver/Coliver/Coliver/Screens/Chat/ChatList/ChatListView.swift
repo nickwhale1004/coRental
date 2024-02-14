@@ -33,7 +33,6 @@ struct ChatListView: View {
                     }
                 }
             }
-            .navigationTitle("Чаты")
             .onAppear {
                 viewModel.onAppear()
             }

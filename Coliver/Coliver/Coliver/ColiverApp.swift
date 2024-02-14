@@ -11,6 +11,7 @@ import Combine
 @main
 struct ColiverApp: App {
 	@ObservedObject private var viewModel = ColiverAppViewModel()
+    @ObservedObject private var authManager = AuthManager.shared
 	@StateObject private var router = Router()
 	
 	var body: some Scene {
@@ -21,12 +22,15 @@ struct ColiverApp: App {
 						.navigationDestination(for: Route.self) { route in
 							getView(from: route)
 						}
+                        .onChange(of: authManager.token) { _ in
+                            router.rootView = authManager.token != nil ? .main : .welcome
+                        }
 				}
 			} else {
 				SplashView(hasAppLoaded: $viewModel.hasAppLoaded)
-                    .onReceive(Just(AuthManager.shared.token)) { token in
-						router.rootView = token != nil ? .main : .welcome
-					}
+                    .onChange(of: authManager.token) { _ in
+                        router.rootView = authManager.token != nil ? .main : .welcome
+                    }
                     .onAppear {
                         viewModel.onAppear()
                     }
