@@ -74,7 +74,6 @@ final class AuthManager: AuthManagerProtocol {
 	private func checkFirstLaunch() {
 		let isFirstLaunch = UserDefaults.standard.object(forKey: Constants.isFirstLaunch) as? Bool
 		if isFirstLaunch ?? true {
-			clearKeychain()
 			UserDefaults.standard.set(false, forKey: Constants.isFirstLaunch)
 		}
 	}

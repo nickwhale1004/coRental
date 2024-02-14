@@ -39,7 +39,6 @@ final class SearchViewModel: ObservableObject {
 	
 	private let userService: UserServiceProtocol
     private let chatService: ChatServiceProtocol
-	private var lastLoadedUser: UserModel?
 	private var userBinding: Binding<UserModel?>
 	
 	// MARK: - Initialzation
@@ -79,26 +78,52 @@ final class SearchViewModel: ObservableObject {
 	
 	// MARK: - Methods
 	
-	func search() {
-		guard userBinding.wrappedValue != lastLoadedUser else { return }
-		stateMachine.tryEvent(.loading)
+	func onAppear() {
+		loadData()
+	}
+    
+    func writeMessageTapped(_ viewModel: SearchCellViewModel) {
+        Task { @MainActor in
+            do {
+                try await chatService.createChat(userId: viewModel.id)
+            } catch {
+                stateMachine.tryEvent(.error)
+            }
+        }
+    }
+    
+    func likeTapped(_ viewModel: SearchCellViewModel) {
+        Task { @MainActor in
+            do {
+                try await userService.like(userId: viewModel.id)
+                loadData()
+            } catch {
+                stateMachine.tryEvent(.error)
+            }
+        }
+    }
+    
+    func unlikeTapped(_ viewModel: SearchCellViewModel) {
+        Task { @MainActor in
+            do {
+                try await userService.unlike(userId: viewModel.id)
+                loadData()
+            } catch {
+                stateMachine.tryEvent(.error)
+            }
+        }
+    }
+    
+    private func loadData() {
+        if cellViewModels.isEmpty {
+            stateMachine.tryEvent(.loading)
+        }
         
         Task { @MainActor in
             do {
                 let userModels = try await userService.search()
                 cellViewModels = userModels.map { SearchCellViewModel($0) }
                 stateMachine.tryEvent(self.cellViewModels.isEmpty ? .empty : .loaded)
-            } catch {
-                stateMachine.tryEvent(.error)
-            }
-        }
-		lastLoadedUser = userBinding.wrappedValue
-	}
-    
-    func cellTapped(_ viewModel: SearchCellViewModel) {
-        Task { @MainActor in
-            do {
-                try await chatService.createChat(userId: viewModel.id)
             } catch {
                 stateMachine.tryEvent(.error)
             }

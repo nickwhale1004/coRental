@@ -22,7 +22,7 @@ final class AuthService: AuthServiceProtocol {
 	
 	// MARK: - Types
 	
-	struct RegisterBody: Codable {
+	struct RegisterRequest: Codable {
 		var login: String
 		var password: String
 		var user: UserModel
@@ -46,7 +46,7 @@ final class AuthService: AuthServiceProtocol {
 	// MARK: - Methods
 	
     func register(user: UserModel, login: String, password: String) async throws -> String {
-		let body = RegisterBody(login: login, password: password, user: user)
+		let body = RegisterRequest(login: login, password: password, user: user)
         
         let response: RegisterResponse = try await networkService.request(url: url + "register", body: body)
         return response.token
@@ -55,7 +55,7 @@ final class AuthService: AuthServiceProtocol {
     func login(login: String, password: String) async throws -> String {
         let body = ["login": login, "password": password]
 		
-        let response: RegisterResponse = try await networkService.request(url: url + "register", body: body)
+        let response: RegisterResponse = try await networkService.request(url: url + "login", body: body)
         return response.token
 	}
 	

@@ -11,21 +11,28 @@ import Combine
 protocol UserServiceProtocol {
 	func getUser() async throws -> UserModel
 	func updateUser(_ user: UserModel) async throws
-	func search() async throws -> [UserModel]
+	func search() async throws -> [SearchUserModel]
+    func like(userId: Int) async throws
+    func unlike(userId: Int) async throws
 }
 
 final class UserService: UserServiceProtocol {
 	
 	// MARK: - Types
 	
-	struct ResponseSearchModel: Codable {
-		let users: [UserModel]
+	struct ResponseSearchModel: Decodable {
+		let users: [SearchUserModel]
 	}
 	
-	struct UpdateUserBody: Codable {
+	struct UpdateUserRequest: Codable {
 		var token: String
 		var user: UserModel
 	}
+    
+    struct LikeUnlikeRequest: Codable {
+        var token: String
+        var targetUserId: Int
+    }
 	
 	// MARK: - Properties
 	
@@ -62,11 +69,11 @@ final class UserService: UserServiceProtocol {
         else {
             throw AuthError.userAnauthorized
         }
-        let body = UpdateUserBody(token: token, user: user)
+        let body = UpdateUserRequest(token: token, user: user)
         try await networkService.request(url: url + "updateUser", body: body)
 	}
 	
-    func search() async throws -> [UserModel] {
+    func search() async throws -> [SearchUserModel] {
         guard
             let token = authManager.token
         else {
@@ -76,4 +83,24 @@ final class UserService: UserServiceProtocol {
         let response: ResponseSearchModel = try await networkService.request(url: url + "searchUsers", body: body)
         return response.users
 	}
+    
+    func like(userId: Int) async throws {
+        guard
+            let token = authManager.token
+        else {
+            throw AuthError.userAnauthorized
+        }
+        let body = LikeUnlikeRequest(token: token, targetUserId: userId)
+        try await networkService.request(url: url + "like", body: body)
+    }
+    
+    func unlike(userId: Int) async throws {
+        guard
+            let token = authManager.token
+        else {
+            throw AuthError.userAnauthorized
+        }
+        let body = LikeUnlikeRequest(token: token, targetUserId: userId)
+        try await networkService.request(url: url + "unlike", body: body)
+    }
 }
