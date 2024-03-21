@@ -89,5 +89,15 @@ def create_tables():
             )
         """)
 
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS UserViews (
+            id INTEGER PRIMARY KEY,
+            user_id INTEGER,
+            viewed_user_id INTEGER,
+            FOREIGN KEY (user_id) REFERENCES UserModel(id),
+            FOREIGN KEY (viewed_user_id) REFERENCES UserModel(id)
+        )
+    """)
+
     conn.commit()
     conn.close()

@@ -4,11 +4,13 @@ from flask_socketio import SocketIO, join_room, emit
 import sqlite3
 
 import jwt
-from flask import Flask, request, jsonify
+from flask import Flask, jsonify
+
+from config import Config
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = '8VDmUhXEtmAYYLh1tRNpCsbFstyIZD'
-app.config['DATABASE'] = 'users.db'
+app.config['SECRET_KEY'] = Config.SECRET_KEY
+app.config['DATABASE'] = Config.DATABASE
 socketio = SocketIO(app, cors_allowed_origins="*", engineio_logger=True, logger=True)
 
 

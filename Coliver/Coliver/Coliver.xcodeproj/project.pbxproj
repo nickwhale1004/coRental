@@ -159,7 +159,7 @@
 			isa = PBXGroup;
 			children = (
 				117C88602A1916D700D3F107 /* Protocols */,
-				117C885B2A19120100D3F107 /* Server */,
+				117C885B2A19120100D3F107 /* DTO */,
 				11286E482A1115F400F27B3E /* StateMachine.swift */,
 				11286E512A12091F00F27B3E /* Router.swift */,
 				11286E582A123B1F00F27B3E /* Validator.swift */,
@@ -310,7 +310,7 @@
 			path = Main;
 			sourceTree = "<group>";
 		};
-		117C885B2A19120100D3F107 /* Server */ = {
+		117C885B2A19120100D3F107 /* DTO */ = {
 			isa = PBXGroup;
 			children = (
 				117C88572A190F8200D3F107 /* HouseModel.swift */,
@@ -322,7 +322,7 @@
 				11AEFA672A9B6B3700ADA76C /* ChatModel.swift */,
 				11D23A732B7C0B7C00EF6179 /* SearchUserModel.swift */,
 			);
-			path = Server;
+			path = DTO;
 			sourceTree = "<group>";
 		};
 		117C88602A1916D700D3F107 /* Protocols */ = {

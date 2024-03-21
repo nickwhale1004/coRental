@@ -14,62 +14,55 @@ def get_user_data():
     data = request.json
     token = data.get('token')
 
-    try:
-        payload = jwt.decode(token, current_app.config['SECRET_KEY'], algorithms=['HS256'])
-        user_id = payload['user_id']
+    payload = jwt.decode(token, current_app.config['SECRET_KEY'], algorithms=['HS256'])
+    user_id = payload['user_id']
 
-        conn = get_db_connection()
-        cursor = conn.cursor()
+    conn = get_db_connection()
+    cursor = conn.cursor()
 
-        cursor.execute("SELECT * FROM UserModel WHERE id = ?", (user_id,))
-        user = cursor.fetchone()
+    cursor.execute("SELECT * FROM UserModel WHERE id = ?", (user_id,))
+    user = cursor.fetchone()
 
-        if user:
-            user_data = {
-                'first_name': user[1],
-                'last_name': user[2],
-                'third_name': user[3],
-                'age': user[4],
-                'gender': user[5],
-                'about': user[6]
+    if user:
+        user_data = {
+            'first_name': user[1],
+            'last_name': user[2],
+            'third_name': user[3],
+            'age': user[4],
+            'gender': user[5],
+            'about': user[6]
+        }
+
+        cursor.execute("SELECT * FROM HouseModel WHERE user_id = ?", (user_id,))
+        house = cursor.fetchone()
+
+        if house:
+            house_data = {
+                'address': house[1],
+                'price': house[2],
+                'image_url': house[3]
             }
+            user_data['house'] = house_data
 
-            cursor.execute("SELECT * FROM HouseModel WHERE user_id = ?", (user_id,))
-            house = cursor.fetchone()
+        cursor.execute("SELECT * FROM SearchModel WHERE user_id = ?", (user_id,))
+        search = cursor.fetchone()
 
-            if house:
-                house_data = {
-                    'address': house[1],
-                    'price': house[2],
-                    'image_url': house[3]
-                }
-                user_data['house'] = house_data
+        if search:
+            search_data = {
+                'type': search[1],
+                'user_age_from': search[2],
+                'user_age_to': search[3],
+                'user_gender': search[4],
+                'house_price_from': search[5],
+                'house_price_to': search[6]
+            }
+            user_data['search'] = search_data
 
-            cursor.execute("SELECT * FROM SearchModel WHERE user_id = ?", (user_id,))
-            search = cursor.fetchone()
-
-            if search:
-                search_data = {
-                    'type': search[1],
-                    'user_age_from': search[2],
-                    'user_age_to': search[3],
-                    'user_gender': search[4],
-                    'house_price_from': search[5],
-                    'house_price_to': search[6]
-                }
-                user_data['search'] = search_data
-
-            conn.close()
-            return jsonify(user_data)
-        else:
-            conn.close()
-            return jsonify({'message': 'User not found'})
-
-    except jwt.ExpiredSignatureError:
-        return jsonify({'message': 'Token expired'})
-
-    except jwt.InvalidTokenError:
-        return jsonify({'message': 'Invalid token'})
+        conn.close()
+        return jsonify(user_data)
+    else:
+        conn.close()
+        return jsonify({'message': 'User not found'})
 
 
 @routes.route('/updateUser', methods=['POST'])
@@ -233,6 +226,15 @@ def search_users():
         user['is_liked'] = cursor.fetchone() is not None
         user['house'] = next((house for house in houses if house['user_id'] == user['id']), None)
 
+        cursor.execute("""
+            INSERT INTO UserViews (user_id, viewed_user_id)
+            SELECT ?, ?
+            WHERE NOT EXISTS (
+                SELECT 1 FROM UserViews WHERE user_id = ? AND viewed_user_id = ?
+            )
+        """, (user_id, user['id'], user_id, user['id']))
+
+    conn.commit()
     conn.close()
 
     return jsonify({'users': matched_users})
