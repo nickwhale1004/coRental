@@ -108,15 +108,18 @@ final class AuthManager: AuthManagerProtocol, ObservableObject {
 			kSecReturnData as String: true
 		]
 		
-		var item: CFTypeRef?
-		let status = SecItemCopyMatching(query as CFDictionary, &item)
-		if status == errSecSuccess, let data = item as? Data, let token = String(data: data, encoding: .utf8) {
-			return token
-		} else {
-			print("Failed to retrieve token from Keychain with status: \(status)")
-			return nil
-		}
-	}
+        var item: CFTypeRef?
+        let status = SecItemCopyMatching(query as CFDictionary, &item)
+        
+        if let data = item as? Data,
+           let token = String(data: data, encoding: .utf8),
+           status == errSecSuccess {
+            return token
+        } else {
+            print("Failed to retrieve token from Keychain with status: \(status)")
+            return nil
+        }
+    }
 	
 	private func clearKeychain() {
 		let query: [String: Any] = [

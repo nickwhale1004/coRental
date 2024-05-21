@@ -73,6 +73,8 @@ struct EditProfileView: View {
 			isRequired: true
 		)
 		.invalid($viewModel.isAgeInvalid)
+        
+        CountryTextField(selectedCountry: $viewModel.country)
 		
 		PlainTextField(
 			"Расскажите немного с себе...",

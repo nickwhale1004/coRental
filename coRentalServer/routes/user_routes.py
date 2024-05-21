@@ -30,7 +30,8 @@ def get_user_data():
             'third_name': user[3],
             'age': user[4],
             'gender': user[5],
-            'about': user[6]
+            'country': user[6],
+            'about': user[7]
         }
 
         cursor.execute("SELECT * FROM HouseModel WHERE user_id = ?", (user_id,))
@@ -85,6 +86,7 @@ def update_user_data():
             third_name = ?,
             age = ?,
             gender = ?,
+            country = ?,
             about = ?
         WHERE id = ?
     """, (
@@ -93,6 +95,7 @@ def update_user_data():
         new_user_data.get('third_name'),
         new_user_data.get('age'),
         new_user_data.get('gender'),
+        new_user_data.get('country'),
         new_user_data.get('about'),
         user_id
     ))
@@ -166,6 +169,12 @@ def search_users():
     if not search_data:
         return jsonify({'message': 'Search parameters not found for the user.'}), 404
 
+    # Получаем данные текущего пользователя
+    cursor.execute("SELECT * FROM UserModel WHERE id = ?", (user_id,))
+    current_user = cursor.fetchone()
+    if not current_user:
+        return jsonify({'message': 'User not found.'}), 404
+
     search_type = search_data['type']
     user_age_from = search_data['user_age_from']
     user_age_to = search_data['user_age_to']
@@ -173,21 +182,21 @@ def search_users():
     house_price_from = search_data['house_price_from']
     house_price_to = search_data['house_price_to']
 
+    # Получаем всех подходящих пользователей
     sql_query = """
-    SELECT UserModel.*, HouseModel.* 
+    SELECT UserModel.*, HouseModel.*
     FROM UserModel
     LEFT JOIN HouseModel ON UserModel.id = HouseModel.user_id
-    WHERE 1=1
+    WHERE UserModel.id != ?
     """
-    params = []
+    params = [user_id]
 
     if user_age_from is not None:
         sql_query += " AND (UserModel.age > ?)"
-        params.extend([user_age_from])
+        params.append(user_age_from)
     if user_age_to is not None:
         sql_query += " AND (UserModel.age < ?)"
-        params.extend([user_age_to])
-
+        params.append(user_age_to)
     if user_gender is not None:
         sql_query += " AND (UserModel.gender = ?)"
         params.append(user_gender)
@@ -195,33 +204,27 @@ def search_users():
     cursor.execute(sql_query, params)
     matched_users = cursor.fetchall()
 
+    # Получаем дома в указанном диапазоне цен
     sql_query = "SELECT * FROM HouseModel WHERE 1=1"
     params = []
 
     if house_price_from is not None:
         sql_query += " AND (price > ?)"
-        params.extend([house_price_from])
+        params.append(house_price_from)
     if house_price_to is not None:
         sql_query += " AND (price < ?)"
-        params.extend([house_price_to])
+        params.append(house_price_to)
 
     cursor.execute(sql_query, params)
     houses = cursor.fetchall()
 
-    matched_user_ids = set(user['id'] for user in matched_users)
+    # Применяем приоритезацию
+    prioritized_users = prioritize_users(current_user, matched_users)
 
-    if search_type == 0:
-        matched_users = [dict(user) for user in matched_users if user['id'] in matched_user_ids and
-                         all(house['user_id'] != user['id'] for house in houses)]
-    else:
-        matched_users = [dict(user) for user in matched_users if user['id'] in matched_user_ids and
-                         any(house['user_id'] == user['id'] for house in houses)]
-
-    matched_users = [dict(user) for user in matched_users if user['id'] != user_id]
-
+    # Добавляем информацию о доме и лайках
     houses = [dict(house) for house in houses]
 
-    for user in matched_users:
+    for user in prioritized_users:
         cursor.execute("SELECT 1 FROM LikesModel WHERE user_id = ? AND liked_user_id = ?", (user_id, user['id']))
         user['is_liked'] = cursor.fetchone() is not None
         user['house'] = next((house for house in houses if house['user_id'] == user['id']), None)
@@ -237,4 +240,29 @@ def search_users():
     conn.commit()
     conn.close()
 
-    return jsonify({'users': matched_users})
+    return jsonify({'users': [dict(user) for user in prioritized_users]})
+
+
+def prioritize_users(current_user, users):
+    same_gender = [user for user in users if user['gender'] == current_user['gender']]
+    different_gender = [user for user in users if user['gender'] != current_user['gender']]
+
+    def age_difference(user):
+        return abs(user['age'] - current_user['age'])
+
+    same_gender.sort(key=age_difference)
+    different_gender.sort(key=age_difference)
+
+    same_origin = [user for user in same_gender if user['country'] == current_user['country']]
+    different_origin = [user for user in same_gender if user['country'] != current_user['country']]
+
+    same_origin_diff_gender = [user for user in different_gender if user['country'] == current_user['country']]
+    different_origin_diff_gender = [user for user in different_gender if user['country'] != current_user['country']]
+
+    prioritized_users = []
+    prioritized_users.extend(same_origin)
+    prioritized_users.extend(different_origin)
+    prioritized_users.extend(same_origin_diff_gender)
+    prioritized_users.extend(different_origin_diff_gender)
+
+    return prioritized_users

@@ -21,10 +21,11 @@ final class ChatViewModel: ObservableObject {
     @Published var paginationState: PaginationState = .idle
     @Published var text: String = ""
     
-    private let chatService: ChatServiceProtocol
-    private let messageService: MessageServiceProtocol
     private let id: Int
     private var page: Int = 0
+    
+    private let chatService: ChatServiceProtocol
+    private let messageService: MessageServiceProtocol
     
     init(
         id: Int,

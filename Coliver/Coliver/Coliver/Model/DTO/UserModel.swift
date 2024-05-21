@@ -14,6 +14,7 @@ struct UserModel: Codable, Hashable {
 	var thirdName: String?
 	var age: Int = 0
 	var gender: Gender = .male
+    var country: String = ""
 	var about: String?
 	
 	var house: HouseModel?

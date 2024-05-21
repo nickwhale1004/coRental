@@ -21,6 +21,7 @@ def create_tables():
             third_name VARCHAR(50),
             age INTEGER,
             gender INTEGER,
+            country VARCHAR(50),
             about VARCHAR(100)
         )
     """)

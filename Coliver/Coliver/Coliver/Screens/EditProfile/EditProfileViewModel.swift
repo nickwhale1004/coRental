@@ -62,6 +62,8 @@ final class EditProfileViewModel: ObservableObject {
 			validate(false)
 		}
 	}
+    @Published var country: String = "Russia"
+    
 	@Published var gender: Gender? {
 		didSet {
 			checkIsTyping()
@@ -130,6 +132,7 @@ final class EditProfileViewModel: ObservableObject {
 				thirdName: thirdName,
 				age: age ?? 0,
 				gender: gender ?? .male,
+                country: country,
 				about: about,
 				house: profile.wrappedValue?.house,
 				search: profile.wrappedValue?.search
@@ -157,7 +160,8 @@ final class EditProfileViewModel: ObservableObject {
 				thirdName: thirdName,
 				age: age ?? 0,
 				gender: gender ?? .male,
-				about: about
+                country: country,
+                about: about
 			)
 			router?.showCompleteRegistration(user)
 		}
